@@ -1,0 +1,235 @@
+﻿@using Booking.ViewModels.Room
+@model MultiRoomAssignmentVM
+
+@{
+    ViewData["Title"] = "Edit Rooms for Listing " + Model.ListingId;
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Adjust as needed.
+
+    // Build a string containing the room class <option> elements for use in dynamic addition.
+    var roomClassOptions = string.Join("", Model.RoomClassList.Select(item => $"<option value='{item.Value}'>{item.Text}</option>"));
+}
+
+<section class="pt-0">
+    <div class="container">
+        <!-- Background image -->
+        <div class="rounded-3 p-3 p-sm-5" style="background-image: url(@Url.Content("~/assets/images/bg/05.jpg")); background-position: center center; background-repeat: no-repeat; background-size: cover;">
+            <!-- Banner title -->
+            <div class="row my-2 my-xl-5">
+                <div class="col-md-8 mx-auto">
+                    <h1 class="text-center text-white">@ViewBag.ListingName  </h1>
+                    <h1 class="text-center text-white">Assign amenities </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+<section class="pt-0">
+    <div class="container">
+        <h1 class="mb-4">Edit Rooms for Listing @Model.ListingId</h1>
+
+        <form asp-action="EditRooms" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.ListingId)
+
+            <div class="accordion" id="roomsAccordion">
+                @for (int i = 0; i < Model.Rooms.Count; i++)
+                {
+                    var room = Model.Rooms[i];
+                    <!-- Include a data attribute for the room id (for AJAX deletion) -->
+                    <div class="accordion-item room-entry" data-room-id="@room.Id">
+                        <h2 class="accordion-header" id="heading@i">
+                            <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@i" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@i">
+                                Room @Model.Rooms[i].RoomNo
+                            </button>
+                        </h2>
+                        <div id="collapse@i" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@i" data-bs-parent="#roomsAccordion">
+                            <div class="accordion-body">
+                                <!-- Hidden field for Room Id -->
+                                <input type="hidden" name="Rooms[@(i)].Id" value="@room.Id" />
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Room Number</label>
+                                        <input asp-for="Rooms[i].RoomNo" class="form-control" required />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].RoomNo, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Adults Capacity</label>
+                                        <input asp-for="Rooms[i].AdultsCapacity" class="form-control" type="number" required />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].AdultsCapacity, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Children Capacity</label>
+                                        <input asp-for="Rooms[i].ChildrenCapacity" class="form-control" type="number" required />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].ChildrenCapacity, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Price Per Night</label>
+                                        <input asp-for="Rooms[i].PricePerNight" class="form-control" type="number" step="0.01" required />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].PricePerNight, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Room Size</label>
+                                        <input asp-for="Rooms[i].RoomSize" class="form-control" type="number" required />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].RoomSize, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Room Class</label>
+                                        <select asp-for="Rooms[i].SelectedRoomClassId" class="form-select" asp-items="Model.RoomClassList" required>
+                                            <option value="">-- Select Room Class --</option>
+                                        </select>
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].SelectedRoomClassId, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Existing Images</label>
+                                        <div class="d-flex flex-wrap">
+                                            @if (room.ExistingImages != null && room.ExistingImages.Any())
+                                            {
+                                                foreach (var img in room.ExistingImages)
+                                                {
+                                                    <div class="position-relative me-2 mb-2">
+                                                        <img src="~/@img.ImagePath" alt="Room Image" class="img-thumbnail" style="max-height: 100px;" />
+                                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-image" data-image-id="@img.Id" style="z-index:10;">&times;</button>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text">No images available.</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Upload New Images</label>
+                                        <input asp-for="Rooms[i].RoomImages" class="form-control" type="file" multiple />
+                                        @Html.ValidationMessageFor(m => m.Rooms[i].RoomImages, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <!-- Delete Room Button using AJAX and SweetAlert -->
+                                <button type="button" class="btn btn-outline-danger delete-room">Delete Room</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <!-- Include SweetAlert2 from CDN if not already loaded -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            // Function to re-index room accordion items.
+            function reIndexRooms() {
+                $("#roomsAccordion .room-entry").each(function (i) {
+                    $(this).find(".accordion-header").attr("id", "heading" + i);
+                    $(this).find(".accordion-button")
+                        .attr("data-bs-target", "#collapse" + i)
+                        .attr("aria-controls", "collapse" + i)
+                        .html("Room " + (i + 1));
+                    $(this).find(".accordion-collapse")
+                        .attr("id", "collapse" + i)
+                        .attr("aria-labelledby", "heading" + i);
+                    $(this).find("input, select").each(function () {
+                        var name = $(this).attr("name");
+                        if (name) {
+                            var newName = name.replace(/\[\d+\]/, "[" + i + "]");
+                            $(this).attr("name", newName);
+                        }
+                    });
+                });
+            }
+
+            // Delete image button event.
+            $("#roomsAccordion").on("click", ".delete-image", function () {
+                var $btn = $(this);
+                var imageId = $btn.data("image-id");
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This will permanently delete the image.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DeleteRoomImage", "Room")",
+                            data: { imageId: imageId },
+                            success: function (response) {
+                                Swal.fire('Deleted!', 'The image has been deleted.', 'success');
+                                // Remove the image container from the UI.
+                                $btn.closest(".position-relative").remove();
+                            },
+                            error: function () {
+                                Swal.fire('Error!', 'There was a problem deleting the image.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Delete an existing room using AJAX and SweetAlert.
+            $("#roomsAccordion").on("click", ".delete-room", function () {
+                var $roomEntry = $(this).closest(".room-entry");
+                var roomId = $roomEntry.data("room-id"); // This attribute should be set for existing rooms.
+                if (!roomId) {
+                    // If no room ID is set (new room), simply remove it.
+                    $roomEntry.remove();
+                    reIndexRooms();
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This will permanently delete the room and all its images.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DeleteRoom", "Room")",
+                            data: { id: roomId },
+                            success: function (response) {
+                                Swal.fire('Deleted!', 'The room has been deleted.', 'success');
+                                $roomEntry.remove();
+                                reIndexRooms();
+                            },
+                            error: function () {
+                                Swal.fire('Error!', 'There was a problem deleting the room.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

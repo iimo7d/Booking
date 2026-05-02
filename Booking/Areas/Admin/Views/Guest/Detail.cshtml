@@ -1,0 +1,87 @@
+﻿@model Booking.Areas.Admin.ViewModels.GuestViewModel
+
+@{
+    ViewData["Title"] = "Guest Detail";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <!-- Guest Profile -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-body d-flex align-items-center">
+                    <!-- Avatar -->
+                    <div class="avatar avatar-lg flex-shrink-0">
+                        <img class="avatar-img rounded-circle" src="@Model.AvatarUrl" alt="Guest Avatar">
+                    </div>
+                    <!-- Info -->
+                    <div class="ms-3">
+                        <h3 class="mb-0">@Model.FullName</h3>
+                        <p class="mb-1"><i class="fas fa-envelope"></i> Email: @Model.Email</p>
+                        <p class="mb-1"><i class="fas fa-phone"></i> Contact: @Model.ContactNo</p>
+                        <p class="mb-0"><i class="fas fa-map-marker-alt"></i> @Model.City, @Model.Country</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking History -->
+    <div class="card shadow">
+        <div class="card-body">
+            <h4 class="mb-3">Booking History</h4>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Room</th>
+                            <th>Price</th>
+                            <th>Room Number</th>
+                            <th>Booking Date</th>
+                            <th>Room State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model.BookingHistory)
+                        {
+                            <tr>
+                                <td class="d-flex align-items-center">
+                                    <img src="@booking.RoomImage" class="rounded me-2" style="width: 50px; height: 50px;">
+                                    <span>@booking.RoomName</span>
+                                </td>
+                                <td>@booking.PricePerNight.ToString("C")</td>
+                                <td>@booking.RoomNumber</td>
+                                <td class="text-success">@booking.BookDate.ToString("dd MMM yyyy")</td>
+                               
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="card-footer pt-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="mb-0">Showing @Model.BookingHistory.Count of total bookings</p>
+                    <nav>
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Detail", new { userId = Model.UserId, page = ViewBag.CurrentPage - 1 })">Prev</a>
+                            </li>
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Detail", new { userId = Model.UserId, page = i })">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                                <a class="page-link" href="@Url.Action("Detail", new { userId = Model.UserId, page = ViewBag.CurrentPage + 1 })">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,226 @@
+﻿@model IEnumerable<Booking.Models.Blogs>
+
+@{
+    ViewData["Title"] = "Our Blog";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="pt-4 pt-md-5">
+    <div class="container">
+        <!-- Title -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-1 mb-0">The Blog</h1>
+            </div>
+        </div>
+
+        <!-- Blog Layout -->
+        <div class="row g-4">
+            @{
+                var featuredBlog = Model.FirstOrDefault();
+                var otherBlogs = Model.Skip(1).Take(3);
+            }
+
+            @if (featuredBlog != null)
+            {
+                <div class="col-lg-6">
+                    <div class="card bg-transparent mb-4 mb-sm-0">
+                        <div class="position-relative">
+                            <img src="@Url.Content("~/" + (string.IsNullOrEmpty(featuredBlog.ImageUrl) ? "assets/images/default.jpg" : featuredBlog.ImageUrl))"
+                                 class="card-img rounded" alt="@featuredBlog.Title">
+                            <div class="card-img-overlay d-flex align-items-start flex-column p-3">
+                                <a href="#" class="badge bg-dark">Featured</a>
+                            </div>
+                        </div>
+                        <div class="card-body px-3 pb-0">
+                            <span><i class="bi bi-calendar2-plus me-2"></i>@featuredBlog.CreatedAt.ToString("dd MMM yyyy")</span>
+                            <h5 class="card-title">
+                                <a href="javascript:void(0);" class="viewBlogDetails" data-blog-id="@featuredBlog.Id">@featuredBlog.Title</a>
+                            </h5>
+                            <p class="mb-0">@featuredBlog.Content.Substring(0, Math.Min(featuredBlog.Content.Length, 120))...</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <h6 class="mb-0">By <a href="#">@featuredBlog.Author</a></h6>
+                                <a href="javascript:void(0);" class="btn btn-link p-0 mb-0 viewBlogDetails" data-blog-id="@featuredBlog.Id">
+                                    Read more <i class="bi bi-arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 ps-lg-5">
+                    <div class="vstack gap-4">
+                        @foreach (var blog in otherBlogs)
+                        {
+                            <div class="card bg-transparent">
+                                <div class="row g-3 g-sm-4 align-items-sm-center">
+                                    <div class="col-4">
+                                        <img src="@Url.Content("~/" + (string.IsNullOrEmpty(blog.ImageUrl) ? "assets/images/default.jpg" : blog.ImageUrl))"
+                                             class="card-img rounded" alt="@blog.Title">
+                                    </div>
+
+                                    <div class="col-8">
+                                        <div class="card-body p-0">
+                                            <h5 class="card-title mb-sm-3">
+                                                <a href="javascript:void(0);" class="stretched-link viewBlogDetails" data-blog-id="@blog.Id">@blog.Title</a>
+                                            </h5>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small"><i class="bi bi-calendar2-plus me-2"></i>@blog.CreatedAt.ToString("dd MMM yyyy")</span>
+                                                <a href="javascript:void(0);" class="btn btn-link p-0 mb-0 viewBlogDetails" data-blog-id="@blog.Id">
+                                                    Read more <i class="bi bi-arrow-up-right"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-0">
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+
+
+
+<section class="pt-4 pt-md-5">
+    <div class="container">
+
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-1 mb-0">Latest Article</h1>
+            </div>
+        </div>
+
+
+        <div class="row g-4">
+            @foreach (var blog in Model.Take(6))
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 bg-light shadow-sm">
+
+                        @if (!string.IsNullOrEmpty(blog.ImageUrl))
+                        {
+                            <div class="ratio ratio-16x9">
+                                <img src="@Url.Content("~/" + blog.ImageUrl)" class="card-img-top" alt="@blog.Title" style="object-fit:cover;">
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(blog.VideoUrl))
+                        {
+                            <div class="ratio ratio-16x9">
+                                <video controls style="background:#000; object-fit:cover;">
+                                    <source src="@Url.Content("~/" + blog.VideoUrl)" type="video/mp4" />
+                                    Your browser does not support HTML video.
+                                </video>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="ratio ratio-16x9">
+                                <img src="@Url.Content("~/assets/images/default.jpg")" class="card-img-top" alt="Default Image" style="object-fit:cover;">
+                            </div>
+                        }
+
+                        <div class="card-body">
+                            <small class="text-muted float-end">
+                                <i class="bi bi-calendar2-plus me-1"></i> @blog.CreatedAt.ToString("dd MMM yyyy")
+                            </small>
+                            <h5 class="card-title">@blog.Title</h5>
+                            <h6 class="text-muted">By @blog.Author</h6>
+                            <p class="card-text text-truncate" style="max-width:95%;">
+                                @blog.Content
+                            </p>
+                            <a href="javascript:void(0);" class="btn btn-link p-0 mb-0 viewBlogDetails" data-blog-id="@blog.Id">
+                                Read more <i class="bi bi-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Blog Details Modal -->
+<div class="modal fade" id="blogDetailsModal" tabindex="-1" aria-labelledby="blogDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blogDetailsModalLabel">Blog Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h3 id="blogTitle"></h3>
+                <small class="text-muted"><i class="bi bi-calendar2-plus"></i> <span id="blogDate"></span></small>
+                <h6 class="text-muted mt-2">By <span id="blogAuthor"></span></h6>
+
+                <!-- Blog Image or Video -->
+                <div id="blogMediaContainer" class="my-3"></div>
+
+                <!-- Blog Content -->
+                <p id="blogContent" class="mt-3"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+            $('.viewBlogDetails').click(function () {
+                var blogId = $(this).data('blog-id');
+
+                $.ajax({
+                    url: '@Url.Action("Details", "Blog")',
+                    type: 'GET',
+                    data: { id: blogId },
+                    success: function (blog) {
+                        if (blog) {
+                            $('#blogTitle').text(blog.title);
+                            $('#blogDate').text(blog.createdAt);
+                            $('#blogAuthor').text(blog.author);
+                            $('#blogContent').html(blog.content);
+
+                            // Display media (image or video)
+                            if (blog.imageUrl) {
+                                $('#blogMediaContainer').html(`<img src="/${blog.imageUrl}" class="img-fluid rounded" alt="Blog Image">`);
+                            } else if (blog.videoUrl) {
+                                $('#blogMediaContainer').html(`
+                                    <video controls class="w-100 rounded">
+                                        <source src="/${blog.videoUrl}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                `);
+                            } else {
+                                $('#blogMediaContainer').html('');
+                            }
+
+                            $('#blogDetailsModal').modal('show');
+                        } else {
+                            Swal.fire('Error!', 'Blog details could not be loaded.', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error!', 'Failed to retrieve blog details.', 'error');
+                    }
+                });
+            });
+        });
+    </script>
+}
+

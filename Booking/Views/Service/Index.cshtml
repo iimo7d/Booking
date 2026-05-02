@@ -1,0 +1,279 @@
+﻿@model IEnumerable<Booking.Models.Service>
+
+@{
+    ViewData["Title"] = "Service List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <!-- Title -->
+    <div class="row">
+        <div class="col-12 mb-4 mb-sm-5">
+            <div class="d-sm-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-3 mb-sm-0">Service List</h1>
+                <div class="d-grid">
+                    <!-- Trigger Create Service Modal -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createServiceModal">
+                        <i class="bi bi-plus-lg me-2"></i>Add New Service
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service List START -->
+    <div class="card shadow mt-5">
+        <!-- Card header: Table head -->
+        <div class="card-header bg-light rounded p-3 d-none d-lg-block">
+            <div class="row row-cols-4 g-4">
+                <div class="col"><h6 class="mb-0">Description</h6></div>
+                <div class="col"><h6 class="mb-0">Type</h6></div>
+                <div class="col"><h6 class="mb-0">Related Listings</h6></div>
+                <div class="col"><h6 class="mb-0">Actions</h6></div>
+            </div>
+        </div>
+
+        <!-- Card body: List rows -->
+        <div class="card-body">
+            @foreach (var service in Model)
+            {
+                <div class="row row-cols-4 align-items-lg-center border-bottom g-4 px-2 py-4">
+                    <!-- Description -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Description:</small>
+                        <h6 class="mb-0 fw-normal">@service.Description</h6>
+                    </div>
+                    <!-- Type -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Type:</small>
+                        <h6 class="mb-0 fw-normal">@service.Type</h6>
+                    </div>
+                    <!-- Related Listings -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Related Listings:</small>
+                        <h6 class="mb-0 fw-normal">@service.ListingServices.Count()</h6>
+                    </div>
+                    <!-- Actions -->
+                    <div class="col">
+                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editServiceModal"
+                                data-service-id="@service.Id" data-service-description="@service.Description" data-service-type="@service.Type">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger deleteServiceButton" data-service-id="@service.Id">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+        <!-- Card body END -->
+        <!-- Card footer -->
+        <div class="card-footer pt-0">
+            <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+                <p class="mb-sm-0 text-center text-sm-start">Showing @Model.Count() entries</p>
+                <nav class="mb-sm-0 d-flex justify-content-center" aria-label="navigation">
+                    <ul class="pagination pagination-sm pagination-primary-soft mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Prev</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="#">..</a></li>
+                        <li class="page-item"><a class="page-link" href="#">15</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <!-- Service List END -->
+</div>
+
+<!-- Create Service Modal -->
+<div class="modal fade" id="createServiceModal" tabindex="-1" aria-labelledby="createServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="createServiceForm" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createServiceModalLabel">Add New Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="Description" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Service Type</label>
+                        <select name="Type" class="form-select" required>
+                            <option value="">--Select Service Type--</option>
+                            @foreach (var type in Enum.GetValues(typeof(Booking.Enums.ServiceType)))
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload Image</label>
+                        <input type="file" name="imageFile" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Service Modal -->
+<div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editServiceForm" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hidden field for Service Id -->
+                    <input type="hidden" id="editServiceId" name="id" value="" />
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" id="editServiceDescription" name="Description" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Service Type</label>
+                        <select id="editServiceType" name="Type" class="form-select" required>
+                            <option value="">--Select Service Type--</option>
+                            @foreach (var type in Enum.GetValues(typeof(Booking.Enums.ServiceType)))
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload New Image</label>
+                        <input type="file" name="imageFile" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation using SweetAlert -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Pre-fill Edit Service Modal from button data attributes.
+        var editServiceModal = document.getElementById('editServiceModal');
+        editServiceModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var serviceId = button.getAttribute('data-service-id');
+            var serviceDescription = button.getAttribute('data-service-description');
+            var serviceType = button.getAttribute('data-service-type');
+            document.getElementById('editServiceId').value = serviceId;
+            document.getElementById('editServiceDescription').value = serviceDescription;
+            document.getElementById('editServiceType').value = serviceType;
+        });
+
+        // AJAX submission for Create Service Form
+        $('#createServiceForm').submit(function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: '@Url.Action("Create", "Service")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    if (result.success) {
+                        Swal.fire('Success!', result.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', result.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error!', 'An error occurred while creating the service.', 'error');
+                }
+            });
+        });
+
+        // AJAX submission for Edit Service Form
+        $('#editServiceForm').submit(function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                url: '@Url.Action("Edit", "Service")',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    if (result.success) {
+                        Swal.fire('Success!', result.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', result.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error!', 'An error occurred while updating the service.', 'error');
+                }
+            });
+        });
+
+        // AJAX submission for Delete Service using SweetAlert
+        $('.deleteServiceButton').click(function (e) {
+            e.preventDefault();
+            var serviceId = $(this).data('service-id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you really want to delete this service?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Service")',
+                        type: 'POST',
+                        data: {
+                            id: serviceId,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').first().val()
+                        },
+                        success: function (result) {
+                            if (result.success) {
+                                Swal.fire('Deleted!', result.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error!', result.message, 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'An error occurred while deleting the service.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,390 @@
+﻿@model Booking.ViewModels.JoinUs.JoinUsRequest
+
+@{
+    ViewData["Title"] = "Add New Listing";
+}
+
+
+
+<!-- Page Banner START -->
+<section class="pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h1 class="fs-2 mb-2">Add New Listing</h1>
+                <p class="mb-0">Praise effects wish change way and any wanted. Lively use looked latter regard had.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Page Banner END -->
+<!-- Steps START -->
+<section>
+    <div class="container">
+        <div id="stepper" class="bs-stepper stepper-outline">
+            <!-- Step Buttons START -->
+            <div class="bs-stepper-header" role="tablist">
+                <div class="step" data-target="#step-1">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-link step-trigger mb-0" role="tab" id="steppertrigger1" aria-controls="step-1">
+                            <span class="bs-stepper-circle">1</span>
+                        </button>
+                        <h6 class="bs-stepper-label d-none d-md-block">Basic Information</h6>
+                    </div>
+                </div>
+                <div class="line"></div>
+                <div class="step" data-target="#step-2">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-link step-trigger mb-0" role="tab" id="steppertrigger2" aria-controls="step-2">
+                            <span class="bs-stepper-circle">2</span>
+                        </button>
+                        <h6 class="bs-stepper-label d-none d-md-block">Detailed Information</h6>
+                    </div>
+                </div>
+                <div class="line"></div>
+                <div class="step" data-target="#step-3">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-link step-trigger mb-0" role="tab" id="steppertrigger3" aria-controls="step-3">
+                            <span class="bs-stepper-circle">3</span>
+                        </button>
+                        <h6 class="bs-stepper-label d-none d-md-block">Price & Policy</h6>
+                    </div>
+                </div>
+            </div>
+            <!-- Step Buttons END -->
+            <!-- Main form START -->
+            <div class="bs-stepper-content p-0 pt-4 pt-md-5">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <!-- IMPORTANT: Form with enctype for file uploads -->
+                        <form id="joinUsForm" asp-action="CreateRequest" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <!-- Hidden field for Dropzone file paths -->
+                            <input type="hidden" id="UploadedListingImagePaths" name="UploadedListingImagePaths" value="" />
+
+                            <!-- Step 1: Basic Information -->
+                            <div id="step-1" role="tabpanel" class="content fade" aria-labelledby="steppertrigger1">
+                                <div class="vstack gap-4">
+                                    <h4 class="mb-0">Basic Information</h4>
+                                    <!-- Listing Category Card -->
+                                    <div class="card shadow">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Choose Listing Category</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-4">
+                                                <!-- Listing Type -->
+                                                <div class="col-12">
+                                                    <label class="form-label">Choose listing type *</label>
+                                                    <select class="form-select js-choice" asp-for="ListingTypeId" asp-items="@ViewBag.ListingTypes" required>
+                                                        <option value="">Select type</option>
+                                                    </select>
+                                                    <small>Hotel: Professional hospitality businesses that usually have a unique style or theme.</small>
+                                                    @Html.ValidationMessageFor(m => m.ListingTypeId, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Listing Name -->
+                                                <div class="col-12">
+                                                    <label class="form-label">Listing Name *</label>
+                                                    <input class="form-control" asp-for="Name" type="text" placeholder="Enter place name" required />
+                                                    <small>A catchy name usually includes: House name - Room name - tourist destination.</small>
+                                                    @Html.ValidationMessageFor(m => m.Name, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Description -->
+                                                <div class="col-12">
+                                                    <label class="form-label">Description *</label>
+                                                    <textarea class="form-control" asp-for="Description" required rows="2" placeholder="Enter description"></textarea>
+                                                    @Html.ValidationMessageFor(m => m.Description, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Select Room Classes -->
+                                                <div class="col-12">
+                                                    <label class="form-label">Select Room Types *</label>
+                                                    <select asp-for="SelectedRoomClassIds" asp-items="@ViewBag.RoomClasses"
+                                                            class="form-select js-choice border-0 z-index-9 bg-transparent" multiple="multiple"
+                                                            data-max-item-count="15" data-remove-item-button="true">
+                                                        <option value="">Select Room type</option>
+                                                    </select>
+                                                    @Html.ValidationMessageFor(m => m.SelectedRoomClassIds, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Select Services -->
+                                                <div class="col-12">
+                                                    <label class="form-label">Select Services *</label>
+                                                    <select asp-for="SelectedServiceIds" asp-items="@ViewBag.Services"
+                                                            class="form-select js-choice border-0 z-index-9 bg-transparent" multiple="multiple"
+                                                            data-max-item-count="15" data-remove-item-button="true">
+                                                        <option value="">Select services</option>
+                                                    </select>
+                                                    @Html.ValidationMessageFor(m => m.SelectedServiceIds, null, new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Listing Location Card -->
+                                    <div class="card shadow mt-3">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Listing Location</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <!-- Country -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Country/Region *</label>
+                                                    <select id="countryId" class="form-select js-choice" asp-for="CountryId" asp-items="@ViewBag.Countries">
+                                                        <option value="">-- Select a country --</option>
+                                                    </select>
+                                                    @Html.ValidationMessageFor(m => m.CountryId, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- City -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label">City *</label>
+                                                    <select id="cityId" class="form-select" asp-for="CityId">
+                                                        <option value="">-- Select a city --</option>
+                                                    </select>
+                                                    @Html.ValidationMessageFor(m => m.CityId, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Street -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Street *</label>
+                                                    <input class="form-control" asp-for="Street" type="text" placeholder="Enter street" />
+                                                    @Html.ValidationMessageFor(m => m.Street, null, new { @class = "text-danger" })
+                                                </div>
+                                                <!-- Phone Number -->
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Phone number</label>
+                                                    <input class="form-control" asp-for="PhoneNo" placeholder="Enter phone number" />
+                                                    @Html.ValidationMessageFor(m => m.PhoneNo, null, new { @class = "text-danger" })
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Upload Images Card -->
+                                    <div class="card shadow mt-3">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Upload Images</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <!-- The Dropzone container -->
+                                <div class="col-12">
+                                    <label class="form-label">Upload image *</label>
+                                    <!-- The Dropzone container -->
+                                    <div id="listingImageDropzone" class="dropzone dropzone-custom">
+                                        <div class="dz-message needsclick">
+                                            <i class="bi bi-upload display-3"></i>
+                                            <p>Drop files here or click to upload.</p>
+                                        </div>
+                                    </div>
+                                    <p class="small mb-0 mt-2">
+                                        <b>Note:</b> Only JPG, JPEG, and PNG. Our suggested dimensions are 600px * 450px. The larger image will be cropped to 4:3 to fit our thumbnails/previews.
+                                    </p>
+                                </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Step 1 Navigation -->
+                                    <div class="text-end mt-3">
+                                        <button type="button" class="btn btn-primary next-btn">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Step 1 END -->
+                            <!-- Step 2: Detailed Information -->
+                            <div id="step-2" role="tabpanel" class="content fade" aria-labelledby="steppertrigger2">
+                                <div class="vstack gap-4">
+                                    <h4 class="mb-0">Detailed Information</h4>
+                                    <!-- Ownership & Identity Proof Card -->
+                                    <div class="card shadow">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Ownership & Identity Proof</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Ownership Proof *</label>
+                                                <input class="form-control" asp-for="OwnershipProof" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                                                @Html.ValidationMessageFor(m => m.OwnershipProof, null, new { @class = "text-danger" })
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Government Certificate *</label>
+                                                <input class="form-control" asp-for="GovernmentCertificate" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                                                @Html.ValidationMessageFor(m => m.GovernmentCertificate, null, new { @class = "text-danger" })
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Identity Proof *</label>
+                                                <input class="form-control" asp-for="IdentityProof" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                                                @Html.ValidationMessageFor(m => m.IdentityProof, null, new { @class = "text-danger" })
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Reason *</label>
+                                                <textarea class="form-control" asp-for="Reason" placeholder="Why do you want to join?" rows="3"></textarea>
+                                                @Html.ValidationMessageFor(m => m.Reason, null, new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Step 2 Navigation -->
+                                    <div class="hstack gap-2 flex-wrap justify-content-between mt-3">
+                                        <button type="button" class="btn btn-secondary prev-btn">Previous</button>
+                                        <button type="button" class="btn btn-primary next-btn">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Step 2 END -->
+                            <!-- Step 3: Price & Policy -->
+                            <div id="step-3" role="tabpanel" class="content fade" aria-labelledby="steppertrigger3">
+                                <div class="vstack gap-4">
+                                    <h4 class="mb-0">Price & Policy</h4>
+                                    <!-- Size Of Listing Card -->
+                                    <div class="card shadow">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Size Of Your Listing</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-4">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Total Floor *</label>
+                                                    <input class="form-control" asp-for="TotalFloor" type="number" placeholder="Enter total floors" />
+                                                    @Html.ValidationMessageFor(m => m.TotalFloor, null, new { @class = "text-danger" })
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Total Room *</label>
+                                                    <input class="form-control" asp-for="TotalRoom" type="number" placeholder="Enter total rooms" />
+                                                    @Html.ValidationMessageFor(m => m.TotalRoom, null, new { @class = "text-danger" })
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label">Room area *</label>
+                                                    <input type="text" asp-for="AvgRoomSize" class="form-control" placeholder="Enter area in sq" />
+                                                    @Html.ValidationMessageFor(m => m.AvgRoomSize, null, new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Listing Price Card -->
+                                    <div class="card shadow mt-3">
+                                        <div class="card-header border-bottom">
+                                            <h5 class="mb-0">Listing Price</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-4">
+                                                <div class="col-12">
+                                                    <label class="form-label">Base Price *</label>
+                                                    <input class="form-control" asp-for="StarterPrice" placeholder="Enter price" />
+                                                    @Html.ValidationMessageFor(m => m.StarterPrice, null, new { @class = "text-danger" })
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Rating *</label>
+                                                    <select class="form-select js-choice border-0 z-index-9 bg-transparent" asp-for="Rating">
+                                                        <option value="">Select rating</option>
+                                                        <option value="5">★★★★★</option>
+                                                        <option value="4">★★★★☆</option>
+                                                        <option value="3">★★★☆☆</option>
+                                                        <option value="2">★★☆☆☆</option>
+                                                        <option value="1">★☆☆☆☆</option>
+                                                    </select>
+                                                    @Html.ValidationMessageFor(m => m.Rating, null, new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Final Submit -->
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <button type="button" class="btn btn-secondary prev-btn">Previous</button>
+                                        <button type="submit" class="btn btn-primary">Add Listing</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Step 3 END -->
+                        </form>
+                        <!-- End Form -->
+                    </div>
+                </div>
+            </div>
+            <!-- Main form END -->
+        </div>
+    </div>
+
+   </section>
+<!-- Steps END -->
+@section Scripts {
+    <script>
+    
+
+        // City dropdown AJAX logic
+        $('#countryId').change(function () {
+            var countryId = $(this).val();
+            var cityDropdown = $('#cityId');
+            cityDropdown.empty().append('<option value="">-- Select a city --</option>');
+            if (countryId) {
+                $.ajax({
+                    url: '@Url.Action("GetCities", "JoinUs")',
+                    type: 'GET',
+                    data: { countryId: countryId },
+                    success: function (data) {
+                        $.each(data, function (index, city) {
+                            cityDropdown.append('<option value="' + city.id + '">' + city.name + '</option>');
+                        });
+                    },
+                    error: function (err) {
+                        console.error("Error loading cities:", err);
+                    }
+                });
+            }
+        });
+
+         // Disable autoDiscover to initialize Dropzone manually.
+        Dropzone.autoDiscover = false;
+
+        // Prepare an array to hold uploaded image file paths (if needed).
+        var uploadedImagePaths = [];
+
+        // Initialize Dropzone on the #listingImageDropzone element.
+        var myDropzone = new Dropzone("#listingImageDropzone", {
+            url: '@Url.Action("UploadImage", "JoinUs")', // Ensure your controller action name matches.
+            paramName: "file", // Name used to transfer the file
+            maxFiles: 5,
+            acceptedFiles: ".jpg,.jpeg,.png",
+            addRemoveLinks: true,
+            dictDefaultMessage: "Drop files here or click to upload.",
+            autoProcessQueue: true, // Automatically upload files upon drop
+            init: function () {
+                this.on("success", function (file, response) {
+                    // Expecting JSON response with a 'filePath' property.
+                    if (response.filePath) {
+                        // Append a hidden input to the form with the file path.
+                        $("<input>")
+                            .attr("type", "hidden")
+                            .attr("name", "UploadedImagePaths")
+                            .val(response.filePath)
+                            .appendTo("#joinUsForm");
+                        uploadedImagePaths.push(response.filePath);
+                    }
+                });
+                this.on("removedfile", function (file) {
+                    // Optionally handle file removal (e.g., remove the corresponding hidden input).
+                    // You can add extra logic here if you want to delete the file from the server.
+                });
+            }
+        });
+
+        // Navigation between steps
+        $('.next-btn').click(function () {
+            var $current = $(this).closest('[role="tabpanel"]');
+            var nextTab = $current.next('[role="tabpanel"]');
+            if (nextTab.length) {
+                $current.removeClass('active').addClass('fade');
+                nextTab.removeClass('fade').addClass('active');
+            }
+        });
+        $('.prev-btn').click(function () {
+            var $current = $(this).closest('[role="tabpanel"]');
+            var prevTab = $current.prev('[role="tabpanel"]');
+            if (prevTab.length) {
+                $current.removeClass('active').addClass('fade');
+                prevTab.removeClass('fade').addClass('active');
+            }
+        });
+
+       
+    </script>
+}

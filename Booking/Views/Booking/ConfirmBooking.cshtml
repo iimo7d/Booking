@@ -1,0 +1,336 @@
+﻿@{
+    ViewData["Title"] = "ConfirmBooking";
+}
+
+@model ConfirmBookingVM
+
+<section>
+    <div class="container">
+        <div class="row g-4 g-lg-5">
+
+            <!-- Left side content START -->
+            <div class="col-xl-8">
+                <div class="vstack gap-5">
+                    <!-- Hotel information START -->
+                    <div class="card shadow">
+                        <!-- Card header -->
+                        <div class="card-header p-4 border-bottom">
+                            <!-- Title -->
+                            <h3 class="mb-0"><i class="fa-solid fa-hotel me-2"></i>Hotel Information</h3>
+                        </div>
+
+                        <!-- Card body START -->
+                        <div class="card-body p-4">
+                            <!-- Card list START -->
+                            <div class="card mb-4">
+                                <div class="row align-items-center">
+                                    <!-- Image -->
+                                    <div class="col-sm-6 col-md-3">
+                                        <img src="~/@Model.Image" class="card-img" alt="">
+                                    </div>
+
+                                    <!-- Card Body -->
+                                    <div class="col-sm-6 col-md-9">
+                                        <div class="card-body pt-3 pt-sm-0 p-0">
+                                            <!-- Title -->
+                                            <h5 class="card-title">
+                                                <a href="@Url.Action("Details", "Listing", new { id = Model.ListingId })">
+                                                    @Model.HotelName
+                                                </a>
+                                            </h5>
+                                            <p class="small mb-2">
+                                                <i class="bi bi-geo-alt me-2"></i>@Model.Address
+                                            </p>
+
+                                            <!-- Rating star -->
+                                            <ul class="list-inline mb-0">
+                                                @for (int i = 0; i < Model.Rating; i++)
+                                                {
+                                                    <li class="list-inline-item me-0 small">
+                                                        <i class="fa-solid fa-star text-warning"></i>
+                                                    </li>
+                                                }
+                                                <li class="list-inline-item ms-2 h6 small fw-bold mb-0">
+                                                    @Model.Rating/5.0
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- Card list END -->
+                            <!-- Information START -->
+                            <div class="row g-4">
+                                <!-- Item -->
+                                <div class="col-lg-4">
+                                    <div class="bg-light py-3 px-4 rounded-3">
+                                        <h6 class="fw-light small mb-1">Check-in</h6>
+                                        <h5 class="mb-1">@Model.CheckInDate.ToString("ddd dd mm")</h5>
+                                    </div>
+                                </div>
+                                <!-- Item -->
+                                <div class="col-lg-4">
+                                    <div class="bg-light py-3 px-4 rounded-3">
+                                        <h6 class="fw-light small mb-1">Check out</h6>
+                                        <h5 class="mb-1">@Model.CheckOutDate.ToString("ddd dd mm")</h5>
+                                    </div>
+                                </div>
+                                <!-- Item -->
+                                <div class="col-lg-4">
+                                    <div class="bg-light py-3 px-4 rounded-3">
+                                        <h6 class="fw-light small mb-1">Total Nights</h6>
+                                        <h5 class="mb-1">@Model.TotalNight</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Information END -->
+                            <!-- Card START -->
+                            <div class="card border mt-4">
+                                <!-- Card header -->
+                                <div class="card-header border-bottom d-md-flex justify-content-md-between">
+                                    <h5 class="card-title mb-0">Rooms</h5>
+                                </div>
+                                <!-- Card body -->
+                                <div class="card-body scrollable-card-body">
+                                    @foreach (var room in Model.Rooms)
+                                    {
+                                        <div class="card shadow p-3 mb-3">
+                                            <div class="row g-4">
+                                                <!-- Card img -->
+                                                <div class="col-md-5 position-relative">
+                                                    <!-- Slider START -->
+                                                    <div class="tiny-slider arrow-round arrow-xs arrow-dark overflow-hidden rounded-2">
+                                                        <div class="tiny-slider-inner" data-autoplay="true" data-arrow="true" data-dots="false" data-items="1">
+                                                            <!-- Image item -->
+                                                            @foreach (var image in room.Images)
+                                                            {
+                                                                <div>
+                                                                    <img src="@Url.Content($"~/{image.ImagePath}")" alt="Card image">
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <!-- Slider END -->
+                                                </div>
+                                                <!-- Card body -->
+                                                <div class="col-md-7">
+                                                    <div class="card-body d-flex flex-column h-100 p-0">
+                                                        <!-- Title -->
+                                                        <h5 class="card-title">
+                                                            <a href="#">@room.RoomNo</a>
+                                                        </h5>
+                                                        <small>@room.RoomClass?.Name</small>
+                                                        @if (room.RoomClass != null && room.RoomClass.RoomClassAmenities.Any(a => a.ListingId == room.ListingId))
+                                                        {
+                                                            var amenities = room.RoomClass.RoomClassAmenities
+                                                            .Where(a => a.ListingId == room.ListingId)
+                                                            .OrderBy(a => Guid.NewGuid())
+                                                            .Take(4)
+                                                            .Select(a => a.Amenity.Name)
+                                                            .ToList();
+                                                            if (amenities.Any())
+                                                            {
+                                                                <ul class="nav nav-divider mb-2">
+                                                                    @foreach (var amenity in amenities)
+                                                                    {
+                                                                        <li class="nav-item">@amenity</li>
+                                                                    }
+                                                                </ul>
+                                                            }
+                                                        }
+                                                        <div class="d-sm-flex justify-content-sm-between align-items-center mt-auto">
+                                                            <!-- Button -->
+                                                            <div class="d-flex align-items-center">
+                                                                <h5 class="fw-bold mb-0 me-1">@room.PricePerNight</h5>
+                                                                <span class="mb-0 me-2">/day</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <!-- Card END -->
+                        </div>
+                        <!-- Card body END -->
+                    </div>
+                    <!-- Hotel information END -->
+                    <!-- Guest detail START -->
+                    <div class="card shadow">
+                        <!-- Card header -->
+                        <div class="card-header border-bottom p-4">
+                            <h4 class="card-title mb-0"><i class="bi bi-people-fill me-2"></i>Guest Details</h4>
+                        </div>
+                        <!-- Card body START -->
+                        <div class="card-body p-4">
+                            <!-- Form START -->
+                            <form class="row g-4">
+                                <!-- Input -->
+                                <div class="col-12">
+                                    <label class="form-label"> Name</label>
+                                    <input type="text" value="@Model.UserName" class="form-control form-control-lg" placeholder="Enter your name">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label"> Email</label>
+                                    <input type="text" value="@Model.Email" class="form-control form-control-lg" placeholder="Enter your name">
+                                </div>
+                            </form>
+                            <!-- Form END -->
+                        </div>
+                        <!-- Card body END -->
+                    </div>
+                    <!-- Guest detail END -->
+                    <!-- Payment Options START -->
+                    <div class="card shadow">
+                        <!-- Card header -->
+                        <div class="card-header border-bottom p-4">
+                            <h4 class="card-title mb-0"><i class="bi bi-wallet-fill me-2"></i>Confirmation & Payment</h4>
+                        </div>
+                        <!-- Card body START -->
+                        <div class="accordion accordion-icon accordion-bg-light" id="accordioncircle">
+                            <!-- Credit or debit card START -->
+                            <div class="accordion-item mb-3">
+                                <h6 class="accordion-header" id="heading-1">
+                                    <button class="accordion-button rounded collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true" aria-controls="collapse-1">
+                                        <i class="bi bi-credit-card text-primary me-2"></i>
+                                        <span class="me-5">Credit or Debit Card</span>
+                                    </button>
+                                </h6>
+                                <div id="collapse-1" class="accordion-collapse collapse show" aria-labelledby="heading-1" data-bs-parent="#accordioncircle">
+                                    <!-- Accordion body -->
+                                    <div class="accordion-body">
+                                        <!-- Card list -->
+                                        <div class="d-sm-flex justify-content-sm-between my-3">
+                                            <h6 class="mb-2 mb-sm-0">We Accept:</h6>
+                                            <ul class="list-inline my-0">
+                                                <li class="list-inline-item">
+                                                    <a href="#"><img src="assets/images/element/visa.svg" class="h-30px" alt=""></a>
+                                                </li>
+                                                <li class="list-inline-item">
+                                                    <a href="#"><img src="assets/images/element/mastercard.svg" class="h-30px" alt=""></a>
+                                                </li>
+                                                <li class="list-inline-item">
+                                                    <a href="#"><img src="assets/images/element/expresscard.svg" class="h-30px" alt=""></a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <!-- Form START -->
+                                        <form class="row g-3" method="post" asp-action="ConfirmBooking">
+                                            <!-- Card number -->
+
+
+                                            <input type="hidden" asp-for="BookingId" value="@Model.BookingId" />
+
+                                            <div class="col-12">
+                                                <label class="form-label">
+                                                    <span class="h6 fw-normal">Card Number *</span>
+                                                </label>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control" required maxlength="14" placeholder="XXXX XXXX XXXX XXXX">
+                                                    <img src="~/assets/images/element/visa.svg"  class="w-30px position-absolute top-50 end-0 translate-middle-y me-2 d-none d-sm-block" alt="">
+                                                </div>
+                                            </div>
+                                            <!-- Expiration Date -->
+                                            <div class="col-md-6">
+                                                <label class="form-label">
+                                                    <span class="h6 fw-normal">Expiration date *</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" required maxlength="2" placeholder="Month">
+                                                    <input type="text" class="form-control" required maxlength="4" placeholder="Year">
+                                                </div>
+                                            </div>
+                                            <!-- Cvv code  -->
+                                            <div class="col-md-6">
+                                                <label class="form-label">
+                                                    <span class="h6 fw-normal">CVV / CVC *</span>
+                                                </label>
+                                                <input type="text" class="form-control" maxlength="3" required placeholder="xxx">
+                                            </div>
+                                            <!-- Card name -->
+                                            <div class="col-12">
+                                                <label class="form-label">
+                                                    <span class="h6 fw-normal">Name on Card *</span>
+                                                </label>
+                                                <input type="text" class="form-control" required aria-label="name of card holder" placeholder="Enter card holder name">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">
+                                                    <span class="h6 fw-normal">Confirmation Number *</span>
+                                                </label>
+                                                <input asp-for="ConfirmationNo" required type="text" class="form-control" aria-label="Confirmation number" placeholder="Confirmation number from mail">
+                                            </div>
+                                            <!-- Buttons -->
+                                            <div class="col-12">
+                                                <div class="d-sm-flex justify-content-sm-between align-items-center">
+                                                    <h4>$@Model.TotalPrice <span class="small fs-6">Due now</span></h4>
+                                                    <button class="btn btn-primary mb-0">Pay Now</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                        <!-- Form END -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Credit or debit card END -->
+                        </div>
+                        <!-- Accordion END -->
+                        <!-- Card footer -->
+                        <div class="card-footer p-4 pt-0">
+                            <p class="mb-0">By processing, You accept Booking <a href="#">Terms of Services</a> and <a href="#">Policy</a></p>
+                        </div>
+                    </div>
+                    <!-- Payment Options END -->
+                </div>
+            </div>
+            <!-- Left side content END -->
+
+            <aside class="col-xl-4">
+                <div class="row g-4">
+                    <!-- Price summary START -->
+                    <div class="col-md-6 col-xl-12">
+                        <div class="card shadow rounded-2">
+                            <!-- card header -->
+                            <div class="card-header border-bottom">
+                                <h5 class="card-title mb-0">Price Summary</h5>
+                            </div>
+                            <!-- Card body -->
+                            <div class="card-body">
+                                <ul class="list-group list-group-borderless">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="h6 fw-light mb-0">Room Charges</span>
+                                        <span class="fs-5">$@Model.TotalPrice</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="h6 fw-light mb-0">Total Discount</span>
+                                        <span class="fs-5">$0</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="h6 fw-light mb-0">Price after discount</span>
+                                        <span class="fs-5">$0</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="h6 fw-light mb-0">Taxes % Fees</span>
+                                        <span class="fs-5">$0</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!-- Card footer -->
+                            <div class="card-footer border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 mb-0">Payable Now</span>
+                                    <span class="h5 mb-0">$@Model.TotalPrice</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Price summary END -->
+                </div>
+            </aside>
+            <!-- Right side content END -->
+        </div> <!-- Row END -->
+    </div> <!-- Container END -->
+</section>

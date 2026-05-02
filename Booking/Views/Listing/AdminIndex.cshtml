@@ -1,0 +1,146 @@
+﻿@model IEnumerable<Booking.Models.Listing>
+
+@{
+    ViewData["Title"] = "Listing List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <!-- Title -->
+    <div class="row">
+        <div class="col-12 mb-4 mb-sm-5">
+            <div class="d-sm-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-3 mb-sm-0">Listing List</h1>
+                <div class="d-grid">
+                    <!-- Trigger Create Listing Modal -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createListingModal">
+                        <i class="bi bi-plus-lg me-2"></i>Add New Listing
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listing Table START -->
+    <div class="card shadow mt-5">
+        <!-- Table header -->
+        <div class="card-header bg-light rounded p-3 d-none d-lg-block">
+            <div class="row row-cols-5 g-4">
+                <div class="col"><h6 class="mb-0">Listing Name</h6></div>
+                <div class="col"><h6 class="mb-0">City</h6></div>
+                <div class="col"><h6 class="mb-0">Agent</h6></div>
+                <div class="col"><h6 class="mb-0">Status</h6></div>
+                <div class="col"><h6 class="mb-0">Actions</h6></div>
+            </div>
+        </div>
+
+        <!-- Card body: List rows -->
+        <div class="card-body">
+            @foreach (var listing in Model)
+            {
+                <div class="row row-cols-5 align-items-lg-center border-bottom g-4 px-2 py-4">
+                    <!-- Listing Name -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Name:</small>
+                        <h6 class="mb-0 fw-normal">@listing.Name</h6>
+                    </div>
+
+                    <!-- City -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">City:</small>
+                        <h6 class="mb-0 fw-normal">@listing.City?.Name</h6>
+                    </div>
+
+                    <!-- Agent -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Agent:</small>
+                        <h6 class="mb-0 fw-normal">@listing.Agent?.FirstName @listing.Agent?.LastName</h6>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col">
+                        <small class="d-block d-lg-none">Status:</small>
+                        <h6 class="mb-0 fw-normal">
+                            @if (listing.IsActive)
+                            {
+                                <span class="text-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Inactive</span>
+                            }
+                        </h6>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col d-flex align-items-center">
+                        <!-- Edit button -->
+                        <a asp-action="Edit" asp-route-id="@listing.Id" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> 
+                        </a>
+
+                        <!-- Toggle Status Button -->
+                        <button type="button" class="btn btn-danger ms-2 toggleStatusButton" data-listing-id="@listing.Id">
+                            <i class="bi @(listing.IsActive ? "bi-toggle-on" : "bi-toggle-off")"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Card footer -->
+        <div class="card-footer pt-0">
+            <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+                <p class="mb-sm-0 text-center text-sm-start">Showing @Model.Count() entries</p>
+                <nav class="mb-sm-0 d-flex justify-content-center" aria-label="navigation">
+                    <!-- Pagination (if needed) -->
+                </nav>
+            </div>
+        </div>
+    </div>
+    <!-- Listing Table END -->
+</div>
+
+
+
+
+<!-- Include SweetAlert and jQuery -->
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).on('click', '.toggleStatusButton', function (e) {
+            e.preventDefault();
+            var listingId = $(this).data('listing-id');
+
+            $.ajax({
+                url: '@Url.Action("ToggleStatus", "Listing", new { area = "" })',
+                type: 'POST',
+                data: { id: listingId },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Reload the page after the user confirms
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error!', 'An error occurred while toggling the status.', 'error');
+                }
+            });
+        });
+    </script>
+}
+
+
+
+

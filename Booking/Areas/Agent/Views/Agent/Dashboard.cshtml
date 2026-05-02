@@ -1,0 +1,190 @@
+﻿@using Booking.Areas.Agent.Models
+@using Booking.Enums
+
+@{
+    ViewData["Title"] = "DashBoard";
+    Layout = "~/Areas/Agent/Views/Shared/_AgentLayout.cshtml";
+    var i = 01;
+}
+
+@model DashboardViewModel
+
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <!-- Title START -->
+        <div class="row">
+            <div class="col-12">
+                <h1 class="fs-4 mb-0"><i class="bi bi-house-door fa-fw me-1"></i>Dashboard</h1>
+            </div>
+        </div>
+        <!-- Title END -->
+        <!-- Counter START -->
+        <div class="row g-4">
+            <!-- Counter item -->
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <!-- Icon -->
+                        <div class="icon-xl bg-success rounded-3 text-white">
+                            <i class="bi bi-journals"></i>
+                        </div>
+                        <!-- Content -->
+                        <div class="ms-3">
+                            <h4>@Model.TotalBookings</h4>
+                            <span>Total Visitors</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter item -->
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <!-- Icon -->
+                        <div class="icon-xl bg-info rounded-3 text-white">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <!-- Content -->
+                        <div class="ms-3">
+                            <h4>@Model.TotalRevenue</h4>
+                            <span>Earning</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter item -->
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <!-- Icon -->
+                        <div class="icon-xl  rounded-3 text-white" style="background-color:red;">
+                            <i class="fa fa-heart"></i>
+                        </div>
+                        <!-- Content -->
+                        <div class="ms-3">
+                            <h4>@Model.TotalFavorites</h4>
+                            <span>Favorite</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter item -->
+            <div class="col-sm-6 col-xl-3">
+                <div class="card card-body border">
+                    <div class="d-flex align-items-center">
+                        <!-- Icon -->
+                        <div class="icon-xl bg-primary rounded-3 text-white">
+                            <i class="bi bi-star"></i>
+                        </div>
+                        <!-- Content -->
+                        <div class="ms-3">
+                            <h4>@Model.TotalReviews</h4>
+                            <span>Total Reviews</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Counter END -->
+        <!-- Booking table START -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border rounded-3">
+                    <!-- Card header START -->
+                    <div class="card-header border-bottom">
+                        <div class="d-sm-flex justify-content-between align-items-center">
+                            <h5 class="mb-2 mb-sm-0">Upcoming Bookings</h5>
+                        </div>
+                    </div>
+                    <!-- Card header END -->
+                    <!-- Card body START -->
+                    <div class="card-body">
+
+                        <div class="table-responsive border-0">
+                            <table class="table align-middle p-4 mb-0 table-hover table-shrink">
+                                <!-- Table head -->
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="border-0 rounded-start">#</th>
+                                        <th scope="col" class="border-0">Name</th>
+                                        <th scope="col" class="border-0">Booking Date</th>
+                                        <th scope="col" class="border-0">status</th>
+                                        <th scope="col" class="border-0">Payment</th>
+                                    </tr>
+                                </thead>
+
+                                <!-- Table body START -->
+                                <tbody class="border-top-0">
+                                <tbody class="border-top-0">
+
+                                        @foreach (var booking in Model.RecentBookings)
+                                        {
+                                        <tr>
+                                            <td><h6 class="mb-0">@i</h6></td>
+                                            <td><h6 class="mb-0">@booking.User.FirstName</h6></td>
+                                            <td>@booking.BookingDate.ToShortDateString()</td>
+                                            <td>
+                                                    @if (booking.Status == BookingStatus.Pending)
+                                                    {
+                                                    <div class="badge bg-warning text-dark">@booking.Status</div>
+                                                    }
+                                                    else if (booking.Status == BookingStatus.Confirmed)
+                                                    {
+                                                    <div class="badge bg-success text-white">@booking.Status</div>
+                                                    }
+                                                    else if (booking.Status == BookingStatus.Cancelled)
+                                                    {
+                                                    <div class="badge bg-danger text-white">@booking.Status</div>
+                                                    }
+                                                    else if (booking.Status == BookingStatus.Completed)
+                                                    {
+                                                    <div class="badge bg-primary text-white">@booking.Status</div>
+                                                    }
+                                                    else
+                                                    {
+                                                    <div class="badge bg-secondary text-white">@booking.Status</div>
+                                                    }
+                                            </td>
+                                            <td>
+                                                    @if (booking.PaymentMethod == PaymentMethod.CreditCard)
+                                                    {
+                                                    <div class="badge bg-primary text-white">@booking.PaymentMethod</div>
+                                                    }
+                                                    else if (booking.PaymentMethod == PaymentMethod.DebitCard)
+                                                    {
+                                                    <div class="badge bg-secondary text-white">@booking.PaymentMethod</div>
+                                                    }
+                                                 
+                                            </td>
+                                        </tr>
+                                            i++;
+                                        }
+                                </tbody>
+
+
+                                </tbody>
+
+                            </table>
+                        </div>
+                        <!-- Hotel room list END -->
+                    </div>
+                    <!-- Card body END -->
+                    <!-- Card footer START -->
+                    <div class="card-footer pt-0">
+                        <!-- Pagination and content -->
+                        <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+                        </div>
+                    </div>
+                    <!-- Card footer END -->
+                </div>
+            </div>
+        </div>
+        <!-- Booking table END -->
+    </div>
+
+</section>
+

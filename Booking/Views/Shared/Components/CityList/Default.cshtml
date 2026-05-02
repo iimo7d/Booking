@@ -1,0 +1,18 @@
+﻿@model IEnumerable<City>
+
+@foreach (var city in Model)
+{
+    <div class="col-6 col-sm-4 col-lg-3 col-xl-2">
+        <div class="card bg-transparent text-center p-1 h-100">
+            <!-- Image -->
+            <img src="@city.ImageUrl" class="rounded-circle object-fit-cover d-block mx-auto"
+                 style="width: 120px; height: 120px;" alt="City Image">
+
+            <div class="card-body p-0 pt-3">
+                <h5 class="card-title">
+                    <a href="@Url.Action("Index", "Listing", new { cityId = city.Id })" class="stretched-link">@city.Name</a>
+                </h5>
+            </div>
+        </div>
+    </div>
+}

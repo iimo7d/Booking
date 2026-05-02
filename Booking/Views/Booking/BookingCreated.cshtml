@@ -1,0 +1,13 @@
+﻿@model Bookings
+
+<h2>Booking Created</h2>
+<p>Your booking has been created successfully.</p>
+<p>Booking ID: @Model.Id</p>
+<p>Confirmation No: @Model.ConfirmationNo</p>
+<p>Check-In: @Model.CheckInDate:d</p>
+<p>Check-Out: @Model.CheckOutDate:d</p>
+
+<p>
+    Please check your email for the confirmation number or proceed to
+    <a asp-controller="Booking" asp-action="ConfirmBooking">Confirm Booking</a>.
+</p>

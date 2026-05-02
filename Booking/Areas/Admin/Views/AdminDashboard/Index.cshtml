@@ -1,0 +1,97 @@
+﻿@{
+	ViewData["Title"] = "Index";
+	Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div>
+	<div class="page-content-wrapper p-xxl-4">
+
+		<!-- Title -->
+		<div class="row">
+			<div class="col-12 mb-4 mb-sm-5">
+				<div class="d-sm-flex justify-content-between align-items-center">
+					<h1 class="h3 mb-2 mb-sm-0">Dashboard</h1>
+					<div class="d-grid"><a href="@Url.Action("Create","Listing" ,new{area =""})" class="btn btn-primary-soft mb-0"><i class="bi bi-plus-lg fa-fw"></i> New Booking</a></div>
+				</div>
+			</div>
+		</div>
+		<div class="row g-4 mb-5">
+
+			<div class="col-md-6 col-xxl-3">
+				@await Component.InvokeAsync("Listing")
+			</div>
+			<div class="col-md-6 col-xxl-3">
+				@await Component.InvokeAsync("Invoice")
+			</div>
+			<div class="col-md-6 col-xxl-3">
+				@await Component.InvokeAsync("Room")
+			</div>
+			<div class="col-md-6 col-xxl-3">
+				@await Component.InvokeAsync("BookingRoom")
+			</div>
+		</div>
+		<div class="row g-4 mb-5">
+			@await Component.InvokeAsync("LastHotel")
+		</div>
+	
+		<div class="row g-4">
+
+			<div class="col-lg-6 col-xxl-4">
+            @await Component.InvokeAsync("RecentRoom")
+			
+			</div>
+			<div class="col-lg-6 col-xxl-4">
+		
+				@await Component.InvokeAsync("RecentReview")
+			</div>
+		
+@* 			<div class="col-lg-6 col-xxl-4">
+				@await Component.InvokeAsync("CityListComponent")
+			</div> *@
+			<div class="col-lg-6 col-xxl-4">
+				@await Component.InvokeAsync("RecentUser")
+			</div>
+			
+		
+		</div>
+	
+
+	</div>
+</div>
+
+
+
+@* @section Scripts
+{
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	<script>
+		// Retrieve dynamic values from ViewBag
+		var freeRooms = @ViewBag.BookedRooms;
+		var bookedRooms = @ViewBag.FreeRooms;
+
+		// Use the correct canvas id that matches the HTML element
+		var ctx = document.getElementById('guestActivityChart').getContext('2d');
+		var roomChart = new Chart(ctx, {
+			type: 'doughnut',
+			data: {
+				datasets: [{
+					data: [bookedRooms, freeRooms],
+					backgroundColor: ['#28a745', '#dc3545'], // Green for booked, Red for free
+					borderColor: ['#fff', '#fff'],
+					borderWidth: 2
+				}]
+			},
+			options: {
+				responsive: true,
+				plugins: {
+					legend: {
+						position: 'bottom'
+					}
+
+
+				}
+			}
+		});
+	</script>
+} *@

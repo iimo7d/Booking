@@ -1,0 +1,194 @@
+﻿@model AppUser
+
+@{
+    ViewData["Title"] = "Agent Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <div class="row g-4 mb-5">
+        <!-- Agent info START -->
+        <div class="col-md-4 col-xxl-3">
+            <div class="card bg-light">
+                <div class="dropdown position-absolute top-0 end-0 m-3">
+                    <a href="#" class="btn btn-sm btn-white btn-round lh-lg mb-0" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots fa-fw"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow rounded">
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square fa-fw me-2"></i>Edit</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-trash fa-fw me-2"></i>Remove</a></li>
+                    </ul>
+                </div>
+                <div class="card-body text-center">
+                    <!-- Avatar Image -->
+                    <div class="avatar avatar-xl flex-shrink-0 mb-3">
+                        <img class="avatar-img rounded-circle" src="@Model.AvatarUrl" alt="avatar">
+                    </div>
+                    <!-- Title -->
+                    <h5 class="mb-2">@Model.UserName</h5>
+                    <ul class="list-inline small mb-0">
+                        <li class="list-inline-item"><i class="fa-solid fa-star text-warning"></i></li>
+                        <li class="list-inline-item"><i class="fa-solid fa-star text-warning"></i></li>
+                        <li class="list-inline-item"><i class="fa-solid fa-star text-warning"></i></li>
+                        <li class="list-inline-item"><i class="fa-solid fa-star text-warning"></i></li>
+                        <li class="list-inline-item"><i class="fa-solid fa-star-half-alt text-warning"></i></li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-light border-top">
+                    <h6 class="mb-3">Contact Details</h6>
+
+                    <!-- Email -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-md bg-mode h6 mb-0 rounded-circle flex-shrink-0">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <div class="ms-2">
+                            <small>Email</small>
+                            <h6 class="fw-normal small mb-0">
+                                <a href="mailto:@Model.Email">@Model.Email</a>
+                            </h6>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-md bg-mode h6 mb-0 rounded-circle flex-shrink-0">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div class="ms-2">
+                            <small>Phone</small>
+                            <h6 class="fw-normal small mb-0">
+                                <a href="tel:@(Model.PhoneNumber ?? "#")">@(Model.PhoneNumber ?? "N/A")</a>
+                            </h6>
+                        </div>
+                    </div>
+                 
+
+                    <!-- Address -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-md bg-mode h6 mb-0 rounded-circle flex-shrink-0">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div class="ms-2">
+                            <small>Address</small>
+                            <h6 class="fw-normal small mb-0">@Model.City</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Agent info END -->
+
+        <div class="col-md-8 col-xxl-9">
+            <div class="card shadow">
+                <div class="card-header border-bottom">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-borderless">
+                                <li class="list-group-item mb-3">
+                                    <span>Full Name:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.FirstName @Model.LastName</span>
+                                </li>
+                                <li class="list-group-item mb-3">
+                                    <span>Username:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.UserName</span>
+                                </li>
+                                <li class="list-group-item mb-3">
+                                    <span>Phone:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.PhoneNumber</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-borderless">
+                                <li class="list-group-item mb-3">
+                                    <span>Email:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.Email</span>
+                                </li>
+                                <li class="list-group-item mb-3">
+                                    <span>Booking:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.Bookings</span>
+                                </li>
+                                <li class="list-group-item mb-3">
+                                    <span>Joining Date:</span>
+                                    <span class="h6 fw-normal ms-1 mb-0">@Model.JoinDate.ToString("dd MMM yyyy")</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (Model.Listings != null && Model.Listings.Any())
+    {
+        <div class="card shadow mt-4">
+            <div class="card-header border-bottom">
+                <h5 class="mb-0">Properties Owned by @Model.FirstName @Model.LastName</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var listing in Model.Listings)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card border h-100">
+                                <div class="card-body">
+                                    <!-- Listing Image -->
+                                    <div class="text-center mb-3">
+                                        <img src="~/@(listing.Images?.FirstOrDefault()?.ImagePath ?? "assets/images/hotel/default.jpg")"
+                                             alt="Listing Image" class="img-fluid rounded" style="max-width: 200px; height: 150px; object-fit: cover;">
+                                    </div>
+
+                                    <!-- Listing Details -->
+                                    <h5 class="card-title">@listing.Name</h5>
+                                    <p class="card-text"><strong>Location:</strong> @listing.City?.Name, @listing.Street</p>
+                                    <p class="card-text"><strong>Rooms:</strong> @listing.TotalRoom</p>
+                                    <p class="card-text"><strong>Floors:</strong> @listing.TotalFloor</p>
+                                    <p class="card-text">
+                                        <strong>Rating:</strong>
+                                        @{
+                                            int fullStars = (int)listing.Rating;
+                                            bool hasHalfStar = listing.Rating - fullStars >= 0.5;
+                                        }
+
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= fullStars)
+                                            {
+                                                <i class="fas fa-star text-warning"></i> 
+                                            }
+                                            else if (i == fullStars + 1 && hasHalfStar)
+                                            {
+                                                <i class="fas fa-star-half-alt text-warning"></i> 
+                                            }
+                                            else
+                                            {
+                                                <i class="far fa-star text-muted"></i> 
+                                            }
+                                        }
+                                    </p>
+
+                                    <p class="card-text"><strong>Price:</strong> $@listing.StarterPrice</p>
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-flex gap-2">
+                                        <a href="@Url.Action("Details","Listing", new { id=listing.Id,area="" })" class="btn btn-sm btn-primary-soft w-100">View Details</a>
+                                       
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mt-4">This agent does not own any properties.</p>
+    }
+</div>

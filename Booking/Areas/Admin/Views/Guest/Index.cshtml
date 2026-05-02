@@ -1,0 +1,98 @@
+﻿@model Booking.Areas.Admin.ViewModels.GuestListViewModel
+
+@{
+    ViewData["Title"] = "Guest List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <div class="row">
+        <div class="col-12 mb-4 mb-sm-5">
+            <div class="d-sm-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-3 mb-sm-0">Guest List</h1>
+                <div class="d-grid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mt-5">
+        <div class="card-body">
+            <div class="bg-light rounded p-3 d-none d-lg-block">
+                <div class="row row-cols-6 g-4">
+                    <div class="col"><h6 class="mb-0">Guest</h6></div>
+                    <div class="col"><h6 class="mb-0">Join Date</h6></div>
+                    <div class="col"><h6 class="mb-0">Email</h6></div>
+                    <div class="col"><h6 class="mb-0">City</h6></div>
+                    <div class="col"><h6 class="mb-0">Country</h6></div>
+                    <div class="col"><h6 class="mb-0">Action</h6></div>
+                </div>
+            </div>
+
+            @foreach (var guest in Model.Guests)
+            {
+                <div class="row row-cols-xl-6 align-items-lg-center border-bottom g-4 px-2 py-4">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar avatar-xs flex-shrink-0">
+                                <img class="avatar-img rounded-circle" src="@guest.AvatarUrl" alt="avatar">
+                            </div>
+                            <div class="ms-2">
+                                <h6 class="mb-0 fw-light">@guest.FullName</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <h6 class="mb-0 fw-normal">@guest.JoinDate.ToString("dd MMM yyyy")</h6>
+                    </div>
+                    <div class="col">
+                        <h6 class="mb-0 fw-normal">@guest.Email</h6>
+                    </div>
+                    <div class="col">
+                        <h6 class="mb-0 fw-normal">@guest.City</h6>
+                    </div>
+                    <div class="col">
+                        <h6 class="mb-0 fw-normal">@guest.Country</h6>
+                    </div>
+                    <div class="col">
+                        <a href="@Url.Action("Detail", "Guest", new { userId = guest.UserId })" class="btn btn-sm btn-light mb-0">View</a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer pt-0">
+            <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+                <p class="mb-sm-0 text-center text-sm-start">
+                    Showing @(Model.CurrentPage * 6 - 5) to @(Model.CurrentPage * 6 > Model.Guests.Count ? Model.Guests.Count : Model.CurrentPage * 6) of @Model.Guests.Count entries
+                </p>
+
+                <nav class="mb-sm-0 d-flex justify-content-center" aria-label="navigation">
+                    <ul class="pagination pagination-sm pagination-primary-soft mb-0">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage - 1 })">Prev</a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                            </li>
+                        }
+
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage + 1 })">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>

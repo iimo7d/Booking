@@ -1,0 +1,55 @@
+﻿@model List<AppUser>
+
+@{
+    ViewData["Title"] = "Agent List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-content-wrapper p-xxl-4">
+    <!-- Title -->
+    <div class="row">
+        <div class="col-12 mb-4 mb-sm-5">
+            <div class="d-sm-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-3 mb-sm-0">Agent List</h1>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="row g-4">
+        @foreach (var agent in Model)
+        {
+            <div class="col-md-6 col-lg-4 col-xxl-3">
+                <div class="card border h-100">
+                   
+                  
+
+                    <!-- Card body -->
+                    <div class="card-body text-center pb-0">
+                        <div class="avatar avatar-xl flex-shrink-0 mb-3">
+                            <img class="avatar-img rounded-circle" src="@agent.AvatarUrl" alt="avatar">
+                        </div>
+
+                        <h5 class="mb-1">@agent.UserName</h5>
+                        <small>
+                            <i class="bi bi-envelope me-1"></i>
+                            <a href="mailto:@agent.Email" class="text-decoration-none">@agent.Email</a>
+                        </small>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <h6 class="mb-0 small"><span class="fw-light">Total listings:</span> 04</h6>
+                            <h6 class="mb-0 small">4.5<i class="fa-solid fa-star text-warning ms-1"></i></h6>
+                        </div>
+                    </div>
+
+                    <!-- Card footer -->
+                    <div class="card-footer d-flex gap-3 align-items-center">
+                        <a href="@Url.Action("Details", "Agent", new { id = agent.Id })"class="btn btn-sm btn-primary-soft mb-0 w-100">View detail</a>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <!-- Agent List END -->
+</div>

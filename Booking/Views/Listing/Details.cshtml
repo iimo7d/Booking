@@ -1,0 +1,899 @@
+﻿@using Booking.Enums
+@using System.Security.Claims
+@using Booking.Services
+@using Booking.ViewModels.Listing
+@model DetailsVM
+
+@{
+    // Retrieve current user ID.
+    var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var listing = Model.Listing;
+    var reviews = Model.Reviews;
+    var totalReviews = Model.TotalReviews;
+    var averageRating = Model.AverageRating;
+    var fiveStarPercent = Model.FiveStarPercent;
+    var fourStarPercent = Model.FourStarPercent;
+    var threeStarPercent = Model.ThreeStarPercent;
+    var twoStarPercent = Model.TwoStarPercent;
+    var oneStarPercent = Model.OneStarPercent;
+    var pageSize = Model.PageSize;
+
+    var cartRoomIds = Context.Session.GetObjectFromJson<List<int>>("RoomCart") ?? new List<int>();
+
+    var price = Model.Rooms.OrderBy(r => r.PricePerNight).FirstOrDefault()?.PricePerNight;
+}
+
+<!-- Include SweetAlert2 CSS and JS -->
+<!-- Show TempData messages via SweetAlert -->
+@if (TempData["Success"] != null)
+{
+    <script>
+        Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: '@TempData["Success"]'
+        });
+    </script>
+}
+@if (TempData["Error"] != null)
+{
+    <script>
+        Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '@TempData["Error"]'
+        });
+    </script>
+}
+
+<!-- Listing Header Section -->
+<section class="py-0 pt-sm-5">
+    <div class="container position-relative">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-lg-flex justify-content-lg-between mb-1">
+                    <div class="mb-2 mb-lg-0">
+                        <h1 class="fs-2">@listing.Name</h1>
+                        <p class="fw-bold mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            @listing.Street, @listing.City.Name - @listing.City.Country.Name
+
+                        </p>
+                    </div>
+                    <ul class="list-inline text-end">
+                        <li class="list-inline-item">
+                            @if (Model.IsFavorite)
+                            {
+                                <form asp-controller="Favorite" asp-action="RemoveFavorite" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="listingId" value="@Model.Listing.Id" />
+                                    <button type="submit" class="btn btn-sm btn-light px-sm-2 rounded-5" style="color: white; background-color: red;">
+                                        <i class="fa-solid fa-fw fa-heart"></i>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="Favorite" asp-action="AddFavorite" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="listingId" value="@Model.Listing.Id" />
+                                    <button type="submit" class="btn btn-sm btn-light px-sm-2 rounded-5">
+                                        <i class="fa-solid fa-fw fa-heart"></i>
+                                    </button>
+                                </form>
+                            }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Gallery Section -->
+<section class="card-grid pt-0">
+    <div class="container">
+        <div class="row g-2">
+            @{
+                var mainImage = listing.Images.FirstOrDefault();
+            }
+            <div class="col-md-6">
+                <a data-glightbox data-gallery="gallery" href="~/@mainImage?.ImagePath">
+                    <div class="card card-grid-lg card-element-hover card-overlay-hover overflow-hidden"
+                         style="background-image:url('@Url.Content($"~/{mainImage?.ImagePath}")'); background-position: center left; background-size: cover;">
+                        <div class="hover-element position-absolute w-100 h-100">
+                            <i class="bi bi-fullscreen fs-6 text-white position-absolute top-50 start-50 translate-middle bg-dark rounded-1 p-2 lh-1"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <div class="row g-2">
+                    @foreach (var image in listing.Images.Skip(1).Take(3))
+                    {
+                        <div class="col-md-6">
+                            <a data-glightbox data-gallery="gallery" href="~/@image.ImagePath">
+                                <div class="card card-grid-sm card-element-hover card-overlay-hover overflow-hidden"
+                                     style="background-image:url('@Url.Content($"~/{image.ImagePath}")'); background-position: center left; background-size: cover;">
+                                    <div class="hover-element position-absolute w-100 h-100">
+                                        <i class="bi bi-fullscreen fs-6 text-white position-absolute top-50 start-50 translate-middle bg-dark rounded-1 p-2 lh-1"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Hotel & Services Section -->
+<section class="pt-0 container">
+    <div class="container-fluid" data-sticky-container>
+        <div class="row g-4 g-xl-5">
+            <!-- Left Content -->
+            <div class="col-xl-7 order-1">
+                <div class="vstack gap-5">
+                    <!-- About Hotel -->
+                    <div class="card bg-transparent">
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="mb-0">About This Hotel</h3>
+                        </div>
+                        <p class="mb-3">@listing.Description</p>
+                        <h5 class="fw-light mb-2">Room Types</h5>
+                        <ul class="list-group list-group-borderless mb-0">
+                            @if (listing.ListingRoomClasses?.Any() == true)
+                            {
+                                foreach (var lrc in listing.ListingRoomClasses)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        @lrc.RoomClass.Name
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#amenityModal-@lrc.RoomClass.Id">View Amenities</a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                    <!-- Services -->
+                    <div class="card bg-transparent">
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="card-title mb-0">Services</h3>
+                        </div>
+                        <div class="card-body pt-4 p-0">
+                            <div class="row g-4">
+                                @if (listing.ListingServices?.Any() == true)
+                                {
+                                    var groupedServices = listing.ListingServices.GroupBy(ls => ls.Service.Type);
+                                    foreach (var group in groupedServices)
+                                    {
+                                        <div class="col-sm-6">
+                                            <h6>
+                                                @switch (group.Key)
+                                                {
+                                                    case Booking.Enums.ServiceType.Language:
+                                                        @:<i class="fa-solid fa-language me-2"></i>Language
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Activities:
+                                                        @:<i class="fa-solid fa-biking me-2"></i>Activities
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Payment:
+                                                        @:<i class="fa-solid fa-credit-card me-2"></i>Payment
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Services:
+                                                        @:<i class="fa-solid fa-concierge-bell me-2"></i>Service
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Safety:
+                                                        @:<i class="bi bi-shield-fill-check me-2"></i>Safety
+                                                        break;
+                                                    default:
+                                                        @:Other
+                                                        break;
+                                                }
+                                            </h6>
+                                            <ul class="list-group list-group-borderless mt-2 mb-0">
+                                                @foreach (var ls in group)
+                                                {
+                                                    <li class="list-group-item pb-0">
+                                                        <i class="fa-solid fa-check-circle text-success me-2"></i> @ls.Service.Description
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+
+
+                    <div class="card bg-transparent" id="room-options">
+                        <!-- Card header -->
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <div class="d-sm-flex justify-content-sm-between align-items-center">
+                                <h3 class="mb-2 mb-sm-0">Room</h3>
+                            </div>
+                        </div>
+
+                        <!-- Card body with scroll but hidden scrollbar -->
+                        <div class="card-body scrollable-card-body">
+
+                            @foreach (var room in Model.Rooms)
+                            {
+
+                                bool inCart = cartRoomIds.Contains(room.Id);
+
+
+                                <div class="card shadow p-3 mb-3">
+                                    <div class="row g-4">
+
+                                        <!-- Card img -->
+                                        <div class="col-md-5 position-relative">
+
+                                            @if (!room.IsBooked)
+                                            {
+                                                <div class="position-absolute top-0 start-0 z-index-1 m-2">
+                                                    <span class="badge text-bg-success">Available</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="position-absolute top-0 start-0 z-index-1 m-2">
+                                                    <span class="badge text-bg-danger">Not Available</span>
+                                                </div>
+                                            }
+
+                                            <!-- Slider START -->
+                                            <div class="tiny-slider arrow-round arrow-xs arrow-dark overflow-hidden rounded-2">
+                                                <div class="tiny-slider-inner" data-autoplay="true" data-arrow="true" data-dots="false" data-items="1">
+                                                    <!-- Image item -->
+                                                    @foreach (var image in room.Images)
+                                                    {
+                                                        <div><img src="@Url.Content($"~/{image.ImagePath}")" alt="Card image"></div>
+                                                    }
+
+                                                </div>
+                                            </div>
+                                            <!-- Slider END -->
+                                            <!-- Button -->
+                                            @*                                             <a href="#" class="btn btn-link text-decoration-underline p-0 mb-0 mt-1" data-bs-toggle="modal" data-bs-target="#roomDetail"><i class="bi bi-eye-fill me-1"></i>View more details</a>
+ *@                                        </div>
+
+                                        <!-- Card body -->
+                                        <div class="col-md-7">
+                                            <div class="card-body d-flex flex-column h-100 p-0">
+
+                                                <!-- Title -->
+                                                <h5 class="card-title"><a href="javascript:void(0);" onclick="loadRoomDetail(@room.Id)">@room.RoomNo</a></h5>
+
+                                                <small>@room.RoomClass?.Name</small>
+
+                                                @if (room.RoomClass != null && room.RoomClass.RoomClassAmenities.Any(a => a.ListingId == room.ListingId))
+                                                {
+                                                    var amenities = room.RoomClass.RoomClassAmenities
+                                                    .Where(a => a.ListingId == room.ListingId)
+                                                    .OrderBy(a => Guid.NewGuid())
+                                                    .Take(4)
+                                                    .Select(a => a.Amenity.Name)
+                                                    .ToList();
+
+                                                    if (amenities.Any())
+                                                    {
+                                                        <ul class="nav nav-divider mb-2">
+                                                            @foreach (var amenity in amenities)
+                                                            {
+                                                                <li class="nav-item">@amenity</li>
+                                                            })
+                                                        </ul>
+                                                    }
+
+                                                }
+
+                                                <div class="d-sm-flex justify-content-sm-between align-items-center mt-auto">
+                                                    <!-- Button -->
+                                                    <div class="d-flex align-items-center">
+                                                        <h5 class="fw-bold mb-0 me-1">@room.PricePerNight</h5>
+                                                        <span class="mb-0 me-2">/day</span>
+                                                    </div>
+
+                                                    @if (!room.IsBooked && !inCart)
+                                                    {
+                                                        <div class="mt-3 mt-sm-0">
+                                                            <a id="selectRoomBtn_@room.Id" onclick="addRoom(@room.Id)" class="btn btn-sm btn-primary mb-0">Select Room</a>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-sm btn-secondary" disabled> Unavailable</button>
+                                                    }
+
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+
+
+                        </div>
+                    </div>
+
+
+                    <!-- Customer Review Section -->
+                    <div class="card bg-transparent">
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="card-title mb-0">Customer Review</h3>
+                        </div>
+                        <div class="card-body pt-4 p-0">
+                            <!-- Rating Info and Progress Bars -->
+                            <div class="card bg-light p-4 mb-4">
+                                <div class="row g-4 align-items-center">
+                                    <div class="col-md-4 text-center">
+                                        <h2 class="mb-0">@averageRating.ToString("0.0")</h2>
+                                        <p class="mb-2">Based on @totalReviews @(totalReviews == 1 ? "Review" : "Reviews")</p>
+                                        <ul class="list-inline mb-0">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (averageRating >= i)
+                                                {
+                                                    <li class="list-inline-item me-0">
+                                                        <i class="fa-solid fa-star text-warning"></i>
+                                                    </li>
+                                                }
+                                                else if (averageRating > i - 1 && averageRating < i)
+                                                {
+                                                    <li class="list-inline-item me-0">
+                                                        <i class="fa-solid fa-star-half-alt text-warning"></i>
+                                                    </li>
+                                                }
+                                                else
+                                                {
+                                                    <li class="list-inline-item me-0">
+                                                        <i class="fa-regular fa-star text-warning"></i>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row gx-3 g-2 align-items-center">
+                                            <!-- 5 Star -->
+                                            <div class="col-9 col-sm-10">
+                                                <div class="progress progress-sm bg-warning bg-opacity-15">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @fiveStarPercent%" aria-valuenow="@fiveStarPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3 col-sm-2 text-end">
+                                                <span class="h6 fw-light mb-0">@fiveStarPercent.ToString("0")%</span>
+                                            </div>
+                                            <!-- 4 Star -->
+                                            <div class="col-9 col-sm-10">
+                                                <div class="progress progress-sm bg-warning bg-opacity-15">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @fourStarPercent%" aria-valuenow="@fourStarPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3 col-sm-2 text-end">
+                                                <span class="h6 fw-light mb-0">@fourStarPercent.ToString("0")%</span>
+                                            </div>
+                                            <!-- 3 Star -->
+                                            <div class="col-9 col-sm-10">
+                                                <div class="progress progress-sm bg-warning bg-opacity-15">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @threeStarPercent%" aria-valuenow="@threeStarPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3 col-sm-2 text-end">
+                                                <span class="h6 fw-light mb-0">@threeStarPercent.ToString("0")%</span>
+                                            </div>
+                                            <!-- 2 Star -->
+                                            <div class="col-9 col-sm-10">
+                                                <div class="progress progress-sm bg-warning bg-opacity-15">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @twoStarPercent%" aria-valuenow="@twoStarPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3 col-sm-2 text-end">
+                                                <span class="h6 fw-light mb-0">@twoStarPercent.ToString("0")%</span>
+                                            </div>
+                                            <!-- 1 Star -->
+                                            <div class="col-9 col-sm-10">
+                                                <div class="progress progress-sm bg-warning bg-opacity-15">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @oneStarPercent%" aria-valuenow="@oneStarPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-3 col-sm-2 text-end">
+                                                <span class="h6 fw-light mb-0">@oneStarPercent.ToString("0")%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Leave Review Form (Standard Post with Dropzone) -->
+
+                            <button type="submit" data-bs-toggle="modal" data-bs-target="#createReviewModal" class="btn btn-lg btn-primary mb-0">
+                                Post review <i class="bi fa-fw bi-arrow-right ms-2"></i>
+                            </button>
+
+                            <!-- Reviews List -->
+                            <div id="reviewsContainer">
+                                @if (reviews.Any())
+                                {
+                                    foreach (var review in reviews.OrderByDescending(r => r.CreationTime))
+                                    {
+                                        <div class="d-md-flex my-4">
+                                            <div class="avatar avatar-lg me-3 flex-shrink-0">
+                                                <img class="avatar-img rounded-circle" src="@(string.IsNullOrEmpty(review.User?.AvatarUrl) ? Url.Content("~/assets/images/avatar/default.jpg") : $"{review.User.AvatarUrl}")" alt="avatar">
+                                            </div>
+                                            <div>
+                                                <div class="d-flex justify-content-between mt-1 mt-md-0">
+                                                    <div>
+                                                        <h6 class="me-3 mb-0">@review.User.FirstName @review.User.LastName</h6>
+                                                        <ul class="nav nav-divider small mb-2">
+                                                            <li class="nav-item">Stayed @review.CreationTime.ToString("dd MMM yyyy")</li>
+                                                            <li class="nav-item">@reviews.Count(r => r.UserId == review.UserId) Reviews written</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="icon-md rounded text-bg-warning fs-6">@review.Rate</div>
+                                                </div>
+                                                <p class="mb-2">@review.Content</p>
+                                                @if (!string.IsNullOrEmpty(review.ImagePath))
+                                                {
+                                                    <div class="col-4 col-sm-3 col-lg-2">
+                                                        <img src="~/@review.ImagePath" alt="Review Image" class="rounded" />
+                                                    </div>
+                                                }
+                                                @if (currentUserId == review.UserId)
+                                                {
+
+                                                    <div>
+                                                        <button class="btn btn-sm btn-primary me-2"
+                                                                data-review-id="@review.Id"
+                                                                data-review-content="@review.Content"
+                                                                data-review-rate="@review.Rate"
+                                                                onclick="editReview(this)">
+                                                            Edit
+                                                        </button>
+                                                        <button class="btn btn-sm btn-danger" data-review-id="@review.Id" onclick="deleteReview(@review.Id)">Delete</button>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="mb-0">No reviews yet.</p>
+                                }
+                            </div>
+
+                            <!-- Load More Reviews Button -->
+                            @if (totalReviews >= pageSize)
+                            {
+                                <div class="text-center">
+                                    <a id="loadMoreBtn" class="btn btn-primary-soft mb-0">Load more</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <!-- End Customer Review Section -->
+                </div>
+            </div>
+            <!-- Right Side Content -->
+            <aside class="col-xl-5 order-xl-2">
+                <div style="position: sticky; top: 100px;">
+                    <div class="card card-body border">
+                        <!-- Title -->
+                        <div class="d-sm-flex justify-content-sm-between align-items-center mb-3">
+                            <div>
+                                <span>Price Start at</span>
+                                <h4 class="card-title mb-0">
+                                    @price.ToString()
+                                </h4>
+                            </div>
+                            <div>
+                                <h6 class="fw-normal mb-0"> per night</h6>
+                            </div>
+                        </div>
+                        <!-- Dynamic Rating Stars -->
+                        <ul class="list-inline mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (averageRating >= i)
+                                {
+                                    <li class="list-inline-item me-0 small">
+                                        <i class="fa-solid fa-star text-warning"></i>
+                                    </li>
+                                }
+                                else if (averageRating > i - 1 && averageRating < i)
+                                {
+                                    <li class="list-inline-item me-0 small">
+                                        <i class="fa-solid fa-star-half-alt text-warning"></i>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="list-inline-item me-0 small">
+                                        <i class="fa-regular fa-star text-warning"></i>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                        <div class="d-grid">
+                            <a href="#room-options" class="btn btn-lg btn-primary-soft mb-0">See our rooms</a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<!-- Amenity Modals -->
+@foreach (var lrc in listing.ListingRoomClasses)
+{
+    <div class="modal fade" id="amenityModal-@lrc.RoomClass.Id" tabindex="-1" aria-labelledby="amenityModalLabel-@lrc.RoomClass.Id" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="amenityModalLabel-@lrc.RoomClass.Id">Amenities for @lrc.RoomClass.Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                        @if (lrc.RoomClass.RoomClassAmenities?.Any() == true)
+                        {
+                            foreach (var amenity in lrc.RoomClass.RoomClassAmenities)
+                            {
+                                <li class="list-group-item">@amenity.Amenity.Name</li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item">No amenities available.</li>
+                        }
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+
+
+
+
+
+<!-- Create Review Modal -->
+<div class="modal fade" id="createReviewModal" tabindex="-1" aria-labelledby="createReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="createReviewForm" method="post" action="@Url.Action("PostReview", "Review")" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createReviewModalLabel">Post Your Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="ListingId" value="@listing.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select class="form-select" name="Rate" id="reviewRate" required>
+                            <option value="">Select Rating</option>
+                            <option value="5">★★★★★ (5/5)</option>
+                            <option value="4">★★★★☆ (4/5)</option>
+                            <option value="3">★★★☆☆ (3/5)</option>
+                            <option value="2">★★☆☆☆ (2/5)</option>
+                            <option value="1">★☆☆☆☆ (1/5)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Your Review</label>
+                        <textarea class="form-control" name="Content" id="reviewContent" placeholder="Your review" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload image *</label>
+                        <div id="createReviewDropzone" class="dropzone dropzone-custom">
+                            <div class="dz-message needsclick">
+                                <i class="bi bi-upload display-3"></i>
+                                <p>Drop files here or click to upload.</p>
+                            </div>
+                        </div>
+                        <p class="small mb-0 mt-2">
+                            <b>Note:</b> Only JPG, JPEG, and PNG. Suggested dimensions: 600px * 450px.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="postReviewBtn" class="btn btn-primary">Post Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editReviewModal" tabindex="-1" aria-labelledby="editReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editReviewForm" method="post" action="@Url.Action("EditReview", "Review")" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editReviewModalLabel">Edit Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="editReviewId" />
+                    <input type="hidden" name="ListingId" value="@listing.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select class="form-select" name="Rate" id="editReviewRate" required>
+                            <option value="5">★★★★★ (5/5)</option>
+                            <option value="4">★★★★☆ (4/5)</option>
+                            <option value="3">★★★☆☆ (3/5)</option>
+                            <option value="2">★★☆☆☆ (2/5)</option>
+                            <option value="1">★☆☆☆☆ (1/5)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" name="Content" id="editReviewContent" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Upload image *</label>
+                        <div id="editReviewDropzone" class="dropzone dropzone-custom">
+                            <div class="dz-message needsclick">
+                                <i class="bi bi-upload display-3"></i>
+                                <p>Drop files here or click to upload.</p>
+                            </div>
+                        </div>
+                        <p class="small mb-0 mt-2">
+                            <b>Note:</b> Only JPG, JPEG, and PNG. Suggested dimensions: 600px * 450px.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Room Detail Modal -->
+<div class="modal fade" id="roomDetail" tabindex="-1" aria-labelledby="roomDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-0">
+            <!-- The modal inner content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Disable autoDiscover for Dropzone.
+        Dropzone.autoDiscover = false;
+
+        // Initialize Dropzone for create review modal.
+        var createReviewDropzone = new Dropzone("#createReviewDropzone", {
+            url: '@Url.Action("UploadImage", "Review")',
+            paramName: "file",
+            maxFiles: 5,
+            acceptedFiles: ".jpg,.jpeg,.png",
+            addRemoveLinks: true,
+            dictDefaultMessage: "Drop files here or click to upload.",
+            autoProcessQueue: true,
+            init: function () {
+                this.on("success", function (file, response) {
+                    if (response.filePath) {
+                        $("<input>")
+                            .attr("type", "hidden")
+                            .attr("name", "UploadedImagePaths")
+                            .val(response.filePath)
+                            .appendTo("#createReviewForm");
+                    }
+                });
+            }
+        });
+
+        // Initialize Dropzone for edit review modal.
+        var editReviewDropzone = new Dropzone("#editReviewDropzone", {
+            url: '@Url.Action("UploadImage", "Review")',
+            paramName: "file",
+            maxFiles: 5,
+            acceptedFiles: ".jpg,.jpeg,.png",
+            addRemoveLinks: true,
+            dictDefaultMessage: "Drop files here or click to upload.",
+            autoProcessQueue: true,
+            init: function () {
+                this.on("success", function (file, response) {
+                    if (response.filePath) {
+                        $("<input>")
+                            .attr("type", "hidden")
+                            .attr("name", "UploadedImagePaths")
+                            .val(response.filePath)
+                            .appendTo("#editReviewForm");
+                    }
+                });
+            }
+        });
+
+        // Edit Review Modal Handling.
+        function editReview(button) {
+            var reviewId = $(button).data("review-id");
+            var content = $(button).data("review-content");
+            var rate = $(button).data("review-rate");
+            $("#editReviewId").val(reviewId);
+            $("#editReviewContent").val(content);
+            $("#editReviewRate").val(rate);
+            $("#editReviewModal").modal("show");
+        }
+
+        // Delete Review via AJAX with SweetAlert confirmation.
+        function deleteReview(reviewId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This review will be permanently deleted.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteReview", "Review")',
+                        type: 'POST',
+                        data: { id: reviewId },
+                        headers: {
+                            "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    // Refresh the page after deletion.
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An error occurred while deleting the review.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+
+
+                function loadRoomDetail(roomId) {
+            $.ajax({
+                url: '@Url.Action("RoomDetail", "Room")',
+                type: 'GET',
+                data: { roomId: roomId },
+                success: function (response) {
+                    // Inject the returned HTML into the modal content container.
+                    $("#roomDetail .modal-content").html(response);
+                    // Show the modal.
+                    $("#roomDetail").modal("show");
+                },
+                error: function () {
+                    alert("Failed to load room details.");
+                }
+            });
+        }
+
+
+
+        var pageIndex = 1;
+        var pageSize = @pageSize;
+        var listingId = '@Model.Listing.Id';
+        var currentUserId = '@User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)';
+
+        $("#loadMoreBtn").click(function (e) {
+            e.preventDefault();
+            pageIndex++;
+            $.ajax({
+                url: '@Url.Action("GetReviews", "Review")',
+                type: 'GET',
+                data: {
+                    listingId: listingId,
+                    page: pageIndex,
+                    pageSize: pageSize
+                },
+                success: function (response) {
+                    // Debug: log response to ensure correct structure.
+                    console.log("GetReviews response:", response);
+
+                    if (response.success && response.reviews.length > 0) {
+                        $.each(response.reviews, function (index, review) {
+                            // Use property names as returned in JSON.
+                            var reviewHtml = `
+                                <div class="d-md-flex my-4">
+                                  <div class="avatar avatar-lg me-3 flex-shrink-0">
+                                    <img class="avatar-img rounded-circle"
+                                         src="${review.avatarPath ? ('~' + review.avatarPath) : '~/assets/images/avatar/default.jpg'}"
+                                         alt="avatar">
+                                  </div>
+                                  <div>
+                                    <div class="d-flex justify-content-between mt-1 mt-md-0">
+                                      <div>
+                                        <h6 class="me-3 mb-0">${review.userName}</h6>
+                                        <ul class="nav nav-divider small mb-2">
+                                          <li class="nav-item">Stayed ${review.creationTime}</li>
+                                          <li class="nav-item">${review.reviewCount} Reviews written</li>
+                                        </ul>
+                                      </div>
+                                      <div class="icon-md rounded text-bg-warning fs-6">${review.rate}</div>
+                                    </div>
+                                    <p class="mb-2">${review.content}</p>
+                            `;ed
+                            if (review.imagePath) {
+                                reviewHtml += `<div class="col-4 col-sm-3 col-lg-2"><img src="${review.imagePath}" alt="Review Image" class="round" /></div>`;
+                            }
+                            // Check if review belongs to the current user.
+                            if (review.userId === currentUserId) {
+                                reviewHtml += `
+                                    <div>
+                                      <button class="btn btn-sm btn-primary me-2"
+                                              data-review-id="${review.id}"
+                                              data-review-content="${review.content}"
+                                              data-review-rate="${review.rate}"
+                                              onclick="editReview(this)">
+                                        Edit
+                                      </button>
+                                      <button class="btn btn-sm btn-danger"
+                                              data-review-id="${review.id}"
+                                              onclick="deleteReview(${review.id})">
+                                        Delete
+                                      </button>
+                                    </div>
+                                `;
+                            }
+                            reviewHtml += `</div></div>`;
+                            $("#reviewsContainer").append(reviewHtml);
+                        });
+                        if (response.reviews.length < pageSize) {
+                            $("#loadMoreBtn").hide();
+                        }
+                    } else {
+                        $("#loadMoreBtn").hide();
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while loading more reviews.'
+                    });
+                }
+            });
+        });
+    </script>
+}

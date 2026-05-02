@@ -1,0 +1,9 @@
+﻿@using Booking
+@using Booking.Models
+@using Booking.ViewModels
+@using Microsoft.AspNetCore.Identity
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager

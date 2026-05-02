@@ -1,0 +1,269 @@
+﻿@using Booking.Areas.Agent.Models
+@model AgentRoomVM
+
+@{
+    ViewData["Title"] = "DashBoard";
+    Layout = "~/Areas/Agent/Views/Shared/_AgentLayout.cshtml";
+    var i = 01;
+}
+
+
+<section class="pt-0">
+    <div class="container vstack gap-4">
+        <!-- Title START -->
+        <div class="row">
+            <div class="col-12">
+                <h1 class="fs-4 mb-0"><i class="bi bi-journals fa-fw me-1"></i>Rooms</h1>
+            </div>
+        </div>
+        <!-- Title END -->
+        <!-- Counter START -->
+        <div class="row g-4">
+            <!-- Total Rooms -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card card-body border p-4 h-100">
+                    <h6>Total Rooms</h6>
+                    <h2 class="text-success">@Model.TotalRooms</h2>
+                </div>
+            </div>
+            <!-- Booked Rooms -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card card-body border p-4 h-100">
+                    <h6>Booked Rooms</h6>
+                    <h2 class="text-info">@Model.BookedRooms</h2>
+                </div>
+            </div>
+            <!-- Available Rooms -->
+            <div class="col-md-6 col-xl-4">
+                <div class="card card-body border p-4 h-100">
+                    <h6>Available Rooms</h6>
+                    <h2 class="text-warning">@Model.AvailableRooms</h2>
+                </div>
+            </div>
+        </div>
+        <!-- Counter END -->
+        <!-- Listing table START -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border">
+                    <!-- Card header -->
+                    <div class="card-header border-bottom">
+                        <h5 class="card-header-title">
+                            My Rooms
+                            <a class="btn btn-outline-primary text-end" href="@Url.Action("AddRooms", "Room", new { area = "", listingId = @Model.HotelId })"><i class="fa fa-plus"></i></a>
+
+                            @if (Model.Rooms.Count() <=0)
+                            {
+                                <a></a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-outline-warning text-end" href="@Url.Action("EditRooms", "Room", new { area = "", listingId = Model.HotelId })"><i class="fa fa-pencil"></i></a>
+                            }
+
+                        </h5>
+                    </div>
+
+                    <!-- Room Cards Container -->
+                    <div id="roomsAccordion">
+                        @foreach (var room in Model.Rooms)
+                        {
+                            <div class="card-body vstack gap-3 room-entry" data-room-id="@room.Id">
+                                <div class="card border p-2">
+                                    <div class="row g-4">
+                                        <!-- Room Image (first image from the room) -->
+                                        <div class="col-md-3 col-lg-2">
+                                            @{
+                                                // Get the first image of the current room
+                                                var firstImagePath = room.Images.FirstOrDefault()?.ImagePath;
+                                                // If no image, use a default placeholder
+                                                var imageUrl = !string.IsNullOrEmpty(firstImagePath)
+                                                ? firstImagePath
+                                                : Url.Content("~/images/placeholder.png");
+                                            }
+                                            <img src="~/@imageUrl" class="card-img rounded-2" alt="Room Image">
+                                        </div>
+
+                                        <!-- Room Details -->
+                                        <div class="col-md-9 col-lg-10">
+                                            <div class="card-body position-relative d-flex flex-column p-0 h-100">
+                                                <!-- Dropdown for Edit/Delete -->
+                                                <div class="list-inline-item dropdown position-absolute top-0 end-0">
+                                                    <a href="#" class="btn btn-sm btn-round btn-light" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </a>
+                                                    <ul class="dropdown-menu dropdown-menu-end min-w-auto shadow rounded">
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="loadRoomEdit(@room.Id)">
+                                                                <i class="bi bi-pencil me-1"></i>Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item delete-room" href="javascript:void(0);">
+                                                                <i class="bi bi-trash"></i>Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <!-- Room Title and Info -->
+                                                <h5 class="card-title mb-0 me-5">
+                                                    <a href="hotel-detail.html">@room.RoomNo</a>
+                                                </h5>
+                                                <small>
+                                                    <i class="fa fa-bed me-2"></i>
+                                                    @room.RoomClass?.Name
+                                                </small>
+
+                                                @if (room.RoomClass != null && room.RoomClass.RoomClassAmenities.Any(a => a.ListingId == room.ListingId))
+                                                {
+                                                    var amenities = room.RoomClass.RoomClassAmenities
+                                                    .Where(a => a.ListingId == room.ListingId)
+                                                    .OrderBy(a => Guid.NewGuid())
+                                                    .Take(4)
+                                                    .Select(a => a.Amenity.Name)
+                                                    .ToList();
+                                                    if (amenities.Any())
+                                                    {
+                                                        <ul class="nav nav-divider mt-3">
+                                                            @foreach (var amenity in amenities)
+                                                            {
+                                                                <li class="nav-item"><small>@amenity</small></li>
+                                                            }
+                                                        </ul>
+                                                    }
+                                                }
+
+                                                <!-- Price -->
+                                                <div class="d-sm-flex justify-content-sm-between align-items-center mt-3 mt-md-auto">
+                                                    <div class="d-flex align-items-center">
+                                                        <h5 class="fw-bold mb-0 me-1">@room.PricePerNight</h5>
+                                                        <span class="mb-0 me-2">/day</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <!-- Room Cards END -->
+                </div>
+            </div>
+        </div>
+        <!-- Listing table END -->
+    </div>
+</section>
+
+<!-- Room Edit Modal Container -->
+<div class="modal fade" id="roomEditModal" tabindex="-1" aria-labelledby="roomEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Edit form content will be loaded here via AJAX -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            function loadRoomEdit(roomId) {
+                $.ajax({
+                    url: '@Url.Action("EditRoom", "Room", new { area = "" })',
+                    type: 'GET',
+                    data: { roomId: roomId },
+                    success: function (response) {
+                        $("#roomEditModal .modal-content").html(response);
+                        $("#roomEditModal").modal("show");
+
+                        // Attach AJAX submission for the edit form with SweetAlert notifications
+                        $("#editRoomForm").submit(function (e) {
+                            e.preventDefault();
+                            var formData = new FormData(this);
+                            $.ajax({
+                                url: $(this).attr("action"),
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function (result) {
+                                    if (result.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success',
+                                            text: result.message,
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            $("#roomEditModal").modal("hide");
+                                            window.location.reload();  // Refresh page on confirmation
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: "Failed to update room."
+                                        });
+                                    }
+                                },
+                                error: function () {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: "An error occurred while updating the room."
+                                    });
+                                }
+                            });
+                        });
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: "Failed to load the edit form."
+                        });
+                    }
+                });
+            }
+
+            // Bind delete event to room deletion using event delegation
+            $("#roomsAccordion").on("click", ".delete-room", function () {
+                var $roomEntry = $(this).closest(".room-entry");
+                var roomId = $roomEntry.data("room-id"); // Get room id from data attribute
+
+                if (!roomId) {
+                    // If no room ID is set (new room), simply remove it.
+                    $roomEntry.remove();
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This will permanently delete the room and all its images.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: '@Url.Action("DeleteRoom", "Room", new { area = "" })',
+                            data: { id: roomId },
+                            success: function (response) {
+                                Swal.fire('Deleted!', 'The room has been deleted.', 'success');
+                                $roomEntry.remove();
+                            },
+                            error: function () {
+                                Swal.fire('Error!', 'There was a problem deleting the room.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

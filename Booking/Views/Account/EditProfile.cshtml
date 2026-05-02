@@ -1,0 +1,154 @@
+﻿@model ProfileVM
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<div class="vstack gap-4">
+    <div class="card border">
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title">Personal Information</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="EditProfile" method="post" enctype="multipart/form-data" class="row g-3">
+                @Html.AntiForgeryToken()
+                <!-- Profile Photo -->
+                <div class="col-12">
+                    <label class="form-label">Upload your profile photo <span class="text-danger">*</span></label>
+                    <div class="d-flex align-items-center">
+                        <label class="position-relative me-4" for="AvatarImage" title="Replace this pic">
+                            <span class="avatar avatar-xl">
+                                <img id="AvatarImage-preview" class="avatar-img rounded-circle border border-white border-3 shadow" src="@Model.Profile.AvatarUrl" alt="User Avatar">
+                            </span>
+                        </label>
+                        <label class="btn btn-sm btn-primary-soft mb-0" for="AvatarImage">Change</label>
+                        <input id="AvatarImage" asp-for="Profile.AvatarImage" class="form-control d-none" type="file" accept="image/*" />
+                        <span asp-validation-for="Profile.AvatarImage" class="text-danger"></span>
+                    </div>
+                </div>
+                <!-- First Name -->
+                <div class="col-md-6">
+                    <label asp-for="Profile.FirstName" class="form-label"></label>
+                    <input asp-for="Profile.FirstName" class="form-control" placeholder="Enter your first name" />
+                    <span asp-validation-for="Profile.FirstName" class="text-danger"></span>
+                </div>
+                <!-- Last Name -->
+                <div class="col-md-6">
+                    <label asp-for="Profile.LastName" class="form-label"></label>
+                    <input asp-for="Profile.LastName" class="form-control" placeholder="Enter your last name" />
+                    <span asp-validation-for="Profile.LastName" class="text-danger"></span>
+                </div>
+                <!-- Email -->
+                <div class="col-md-6">
+                    <label asp-for="Profile.Email" class="form-label"></label>
+                    <input asp-for="Profile.Email" class="form-control" placeholder="Enter your email address" />
+                    <span asp-validation-for="Profile.Email" class="text-danger"></span>
+                </div>
+                <!-- Country -->
+                <div class="col-md-6">
+                    <label class="form-label">Country</label>
+                    <select class="form-select" asp-for="Profile.CountryId" asp-items="@ViewBag.Countries" id="countryId">
+                        <option value="">Select your country</option>
+                    </select>
+                </div>
+                <!-- City -->
+                <div class="col-md-6">
+                    <label asp-for="Profile.CityId" class="form-label">City</label>
+                    <select asp-for="Profile.CityId" class="form-select" id="cityId">
+                        <option value="">Select your city</option>
+                    </select>
+                    <span asp-validation-for="Profile.CityId" class="text-danger"></span>
+                </div>
+                <!-- Date of Birth -->
+                <div class="col-md-6">
+                    <label asp-for="Profile.DOB" class="form-label"></label>
+                    <input asp-for="Profile.DOB" class="form-control flatpickr" type="date" />
+                    <span asp-validation-for="Profile.DOB" class="text-danger"></span>
+                </div>
+                <!-- Submit Button -->
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary mb-0">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="card border">
+        <!-- Card header -->
+        <div class="card-header border-bottom">
+            <h4 class="card-header-title">Update Password</h4>
+            <p class="mb-0">Your current email address is <span class="text-primary">@Model.Profile.Email</span></p>
+        </div>
+
+        <!-- Card body START -->
+        <form asp-action="ChangePassword" method="post" class="card-body">
+            @Html.AntiForgeryToken()
+            <!-- Current password -->
+            <div class="mb-3">
+                <label class="form-label" for="OldPassword">Current password</label>
+                <input class="form-control" type="password" id="OldPassword" name="OldPassword" placeholder="Enter current password" />
+                <span asp-validation-for="Password.OldPassword" class="text-danger"></span>
+            </div>
+            <!-- New password -->
+            <div class="mb-3">
+                <label class="form-label" for="NewPassword">Enter new password</label>
+                <div class="input-group">
+                    <input class="form-control fakepassword" type="password" id="NewPassword" name="NewPassword" placeholder="Enter new password" />
+                    <span class="input-group-text p-0 bg-transparent">
+                        <i class="fakepasswordicon fas fa-eye-slash cursor-pointer p-2"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Password.NewPassword" class="text-danger"></span>
+            </div>
+            <!-- Confirm new password -->
+            <div class="mb-3">
+                <label class="form-label" for="ConfirmPassword">Confirm new password</label>
+                <input class="form-control" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="Confirm new password" />
+                <span asp-validation-for="Password.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary mb-0">Change Password</button>
+            </div>
+        </form>
+        <!-- Card body END -->
+    </div>
+
+
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("AvatarImage").addEventListener("change", function (event) {
+            const [file] = event.target.files;
+            if (file) {
+                document.getElementById("AvatarImage-preview").src = URL.createObjectURL(file);
+            }
+        });
+
+        $('#countryId').change(function () {
+            var countryId = $(this).val();
+            var cityDropdown = $('#cityId');
+            cityDropdown.empty().append('<option value="">-- Select a city --</option>');
+            if (countryId) {
+                $.ajax({
+                    url: '@Url.Action("GetCities", "Account")',
+                    type: 'GET',
+                    data: { countryId: countryId },
+                    success: function (data) {
+                        $.each(data, function (index, city) {
+                            cityDropdown.append('<option value="' + city.id + '">' + city.name + '</option>');
+                        });
+                    },
+                    error: function (err) {
+                        console.error("Error loading cities:", err);
+                    }
+                });
+            }
+        });
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

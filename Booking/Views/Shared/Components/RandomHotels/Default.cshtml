@@ -1,0 +1,39 @@
+﻿@model List<Listing>
+
+@foreach (var listing in Model)
+{
+    var avgReview = listing.Reviews.Any() ? listing.Reviews.Average(r => r.Rate) : 0;
+
+    <!-- Hotel item -->
+    <div class="col-sm-6 col-xl-3">
+        <!-- Card START -->
+        <div class="card card-img-scale overflow-hidden bg-transparent">
+            <!-- Image and overlay -->
+            <div class="card-img-scale-wrapper rounded-3">
+                <!-- Image -->
+                <img src="~/@listing.Images.First().ImagePath" class="card-img" alt="hotel image">
+                <!-- Badge -->
+                <div class="position-absolute bottom-0 start-0 p-3">
+                    <div class="badge text-bg-dark fs-6 rounded-pill stretched-link">
+                        <i class="bi bi-geo-alt me-2"></i>@listing.City.Name
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card body -->
+            <div class="card-body px-2">
+                <!-- Title -->
+                <h5 class="card-title">
+                    <a href="@Url.Action("Details","Listing",new {id = listing.Id})" class="stretched-link">@listing.Name</a>
+                </h5>
+                <!-- Price and rating -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        @avgReview.ToString("0.0") <i class="fa-solid fa-star text-warning ms-1"></i>
+                    </h6>
+                </div>
+            </div>
+        </div>
+        <!-- Card END -->
+    </div>
+}

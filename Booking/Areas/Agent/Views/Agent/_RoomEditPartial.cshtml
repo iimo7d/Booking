@@ -1,0 +1,61 @@
+﻿@model Booking.Models.Room
+
+<div class="modal-header">
+    <h5 class="modal-title" id="roomEditModalLabel">Edit Room</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <form id="editRoomForm" method="post" action="@Url.Action("EditRoom", "Room")" enctype="multipart/form-data">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <div class="mb-3">
+            <label class="form-label">Room Number</label>
+            <input type="text" name="RoomNo" class="form-control" value="@Model.RoomNo" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Adults Capacity</label>
+            <input type="number" name="AdultsCapacity" class="form-control" value="@Model.AdultsCapacity" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Children Capacity</label>
+            <input type="number" name="ChildrenCapacity" class="form-control" value="@Model.ChildrenCapacity" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Price Per Night</label>
+            <input type="number" step="0.01" name="PricePerNight" class="form-control" value="@Model.PricePerNight" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Room Size (sq.ft.)</label>
+            <input type="number" name="RoomSize" class="form-control" value="@Model.RoomSize" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Room Class</label>
+            <select name="RoomClassId" asp-for="RoomClassId" class="form-select" asp-items="@ViewBag.RoomClasses" required>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Existing Images</label>
+            <div id="existingImages" class="row">
+                @if (Model.Images != null && Model.Images.Any())
+                {
+                    foreach (var image in Model.Images)
+                    {
+                        <div class="col-4 mb-2" id="roomImage_@image.Id">
+                            <img src="@Url.Content("~/" + image.ImagePath)" class="img-thumbnail" alt="Room Image" />
+                            <button type="button" class="btn btn-sm btn-danger mt-1" onclick="deleteRoomImage(@image.Id)">Delete</button>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>No images available.</p>
+                }
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Add New Images</label>
+            <input type="file" name="RoomImages" multiple class="form-control" />
+            <p class="small text-muted">Allowed file types: JPG, JPEG, PNG.</p>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>

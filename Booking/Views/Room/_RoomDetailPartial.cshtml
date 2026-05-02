@@ -1,0 +1,49 @@
+﻿
+@{
+    Layout = null;
+}
+
+@model Booking.Models.Room
+<link rel="stylesheet" type="text/css" href="~/assets/vendor/tiny-slider/tiny-slider.css">
+
+<div class="modal-header p-3">
+    <h5 class="modal-title mb-0" id="roomDetailLabel">@Model.RoomClass.Name</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-0">
+    <div class="card bg-transparent p-3">
+        <!-- Dynamic Slider for Room Images -->
+        <div class="tiny-slider arrow-round arrow-dark overflow-hidden rounded-2">
+            <div class="tiny-slider-inner" data-autoplay="true" data-arrow="true" data-dots="false" data-items="1">
+                @foreach (var image in Model.Images)
+                {
+                    <div>
+                        <img src="@Url.Content($"~/{image.ImagePath}")" class="rounded-2" alt="Room image">
+                    </div>
+                }
+            </div>
+        </div>
+        <!-- Room Title and Details -->
+        <div class="card-header bg-transparent pb-0">
+            <h3 class="card-title mb-0">@Model.RoomClass.Name</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Room No:</strong> @Model.RoomNo</p>
+            <p><strong>Price per Night:</strong> @Model.PricePerNight</p>
+            <p><strong>Room Size:</strong> @Model.RoomSize sq.ft.</p>
+            <h5 class="mb-0">Amenities</h5>
+            <ul class="list-group list-group-borderless mt-2 mb-0">
+                @foreach (var amenity in Model.RoomClass.RoomClassAmenities)
+                {
+                    <li class="list-group-item d-flex mb-0">
+                        <i class="fa-solid fa-check-circle text-success me-2"></i>
+                        <span class="h6 fw-light mb-0">@amenity.Amenity.Name</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="~/assets/vendor/tiny-slider/tiny-slider.js"></script>
+<script src="~/assets/js/functions.js"></script>

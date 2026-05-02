@@ -1,0 +1,38 @@
+﻿@using Booking.Areas.Admin.ViewModels
+@model List<RecentReviewViewModel>
+
+<div class="card shadow h-100">
+   
+    <div class="card-body">
+        @foreach (var review in Model)
+        {
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-sm-flex align-items-center mb-1 mb-sm-0">
+                    <div class="flex-shrink-0">
+                        <img src="~/@review.ImagePath" class="rounded h-50px w-50px" alt="Review Image">
+                    </div>
+                    <div class="ms-sm-3 mt-2 mt-sm-0">
+                        <h6 class="mb-1">@review.HotelName</h6>
+                        <p class="small text-muted">@review.City, @review.Country</p>
+                        <p class="small">@review.ReviewContent</p>
+                        <div class="d-flex align-items-center">
+                            <span class="text-warning">
+                                @for (int i = 0; i < review.ReviewRating; i++)
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                @if (review.ReviewRating % 1 != 0)
+                                {
+                                    <i class="bi bi-star-half"></i>
+                                }
+                            </span>
+                            <small class="ms-2">@(review.ReviewDate.HasValue ? review.ReviewDate.Value.ToShortDateString() : "No Date")</small>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+        }
+    </div>
+</div>

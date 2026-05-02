@@ -1,0 +1,46 @@
+﻿@using Booking.Areas.Admin.ViewModels
+@model List<LatestHotelViewModel>
+
+<div class="col-12">
+    <div class="d-flex justify-content-between">
+        <h4 class="mb-0">Latest hotels</h4>
+        <a class="btn btn-primary-soft mb-0" asp-action="AdminIndex" asp-controller="Listing" asp-area="">View All</a>
+    </div>
+</div>
+
+@foreach (var hotel in Model)
+{
+    <div class="col-lg-6">
+        <div class="card shadow p-3">
+            <div class="row g-4">
+                <!-- Card img -->
+                <div class="col-md-3">
+                    <img src="~/@hotel.ImagePath" class="rounded-2 img-fluid w-100"
+                         style="height: 150px; object-fit: cover;" alt="Hotel Image">
+                </div>
+
+                <!-- Card body -->
+                <div class="col-md-9">
+                    <div class="card-body position-relative d-flex flex-column p-0 h-100">
+
+                 
+                        <!-- Title -->
+                        <h5 class="card-title mb-0 me-5">@hotel.Name</h5>
+                        <small><i class="bi bi-geo-alt me-2"></i>@hotel.Street, @hotel.CountryName</small>
+
+                        <!-- Price and Button -->
+                        <div class="d-sm-flex justify-content-sm-between align-items-center mt-3 mt-md-auto">
+                            <!-- Price -->
+                            <div class="d-flex align-items-center">
+                                <h5 class="fw-bold mb-0 me-1">$1586</h5>
+                                <span class="mb-0 me-2">/day</span>
+                            </div>
+                           
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

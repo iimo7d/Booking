@@ -1,0 +1,305 @@
+﻿@using Booking.ViewModels.Listing
+@model EditVM
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<section class="pt-4 pt-md-5 pb-0">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mx-auto text-center">
+                <h1 class="fs-2 mb-2">Edit Listing</h1>
+                <p class="mb-0">Update the listing details below.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <!-- The form posts listing data and uses multipart/form-data -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="vstack gap-4" id="listingForm">
+                    @Html.HiddenFor(m => m.Id)
+                    <!-- Owner Detail Card START -->
+                    <div class="card shadow">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Owner Detail</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Hotel Name -->
+                                <div class="col-12">
+                                    <label class="form-label">Hotel Name</label>
+                                    <input asp-for="Name" required type="text" class="form-control" placeholder="Hotel name" />
+                                    @Html.ValidationMessageFor(m => m.Name, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Listing Type -->
+                                <div class="col-12">
+                                    <label class="form-label">Choose Listing Type *</label>
+                                    <select class="form-select js-choice" asp-for="ListingTypeId" required asp-items="@ViewBag.ListingTypes" required>
+                                        <option value="">Select type</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.ListingTypeId, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Rating -->
+                                <div class="col-12">
+                                    <label class="form-label">Rating *</label>
+                                    <select class="form-select js-choice border-0 z-index-9 bg-transparent" required asp-for="Rating">
+                                        <option value="">Select rating</option>
+                                        <option value="5">★★★★★</option>
+                                        <option value="4">★★★★☆</option>
+                                        <option value="3">★★★☆☆</option>
+                                        <option value="2">★★☆☆☆</option>
+                                        <option value="1">★☆☆☆☆</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.Rating, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Phone Number -->
+                                <div class="col-12">
+                                    <label class="form-label">Phone Number</label>
+                                    <input asp-for="PhoneNo" class="form-control" required placeholder="Enter a Valid Phone Number" />
+                                    @Html.ValidationMessageFor(m => m.PhoneNo, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Room Types (Multi-select) -->
+                                <div class="col-12">
+                                    <label class="form-label">Select Room Types *</label>
+                                    <select asp-for="SelectedRoomClassIds" required asp-items="@ViewBag.RoomClasses"
+                                            class="form-select js-choice border-0 z-index-9 bg-transparent" multiple="multiple"
+                                            data-max-item-count="15" data-remove-item-button="true">
+                                        <option value="">Select Room type</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.SelectedRoomClassIds, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Services (Multi-select) -->
+                                <div class="col-12">
+                                    <label class="form-label">Select Services *</label>
+                                    <select asp-for="SelectedServiceIds" required asp-items="@ViewBag.Services"
+                                            class="form-select js-choice border-0 z-index-9 bg-transparent" multiple="multiple"
+                                            data-max-item-count="15" data-remove-item-button="true">
+                                        <option value="">Select services</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.SelectedServiceIds, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Description -->
+                                <div class="col-12">
+                                    <label class="form-label">Description</label>
+                                    <textarea asp-for="Description" class="form-control" required rows="2" placeholder="Enter description"></textarea>
+                                    @Html.ValidationMessageFor(m => m.Description, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Country and City Dropdowns -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Country/Region *</label>
+                                    <select id="countryId" class="form-select js-choice" asp-for="CountryId" required asp-items="@ViewBag.Countries">
+                                        <option value="">-- Select a country --</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.CountryId, null, new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">City *</label>
+                                    <select id="cityId" class="form-select" required asp-for="CityId">
+                                        <option value="">-- Select a city --</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.CityId, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Street -->
+                                <div class="col-12">
+                                    <label class="form-label">Street *</label>
+                                    <input class="form-control" asp-for="Street" type="text" required placeholder="Enter street" />
+                                    @Html.ValidationMessageFor(m => m.Street, null, new { @class = "text-danger" })
+                                </div>
+                                <!-- Additional Numeric Fields -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Total Floor</label>
+                                    <input asp-for="TotalFloor" class="form-control" type="text" required placeholder="Enter total floors" />
+                                    @Html.ValidationMessageFor(m => m.TotalFloor, null, new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Total Room</label>
+                                    <input asp-for="TotalRoom" class="form-control" type="text" required placeholder="Enter total rooms" />
+                                    @Html.ValidationMessageFor(m => m.TotalRoom, null, new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Average Room Size</label>
+                                    <input asp-for="AvgRoomSize" class="form-control" type="text" required placeholder="Enter average room size" />
+                                    @Html.ValidationMessageFor(m => m.AvgRoomSize, null, new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Starter Price</label>
+                                    <input asp-for="StarterPrice" class="form-control" type="text" required placeholder="Enter starter price" />
+                                    @Html.ValidationMessageFor(m => m.StarterPrice, null, new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Section -->
+                    <div class="card shadow mt-4">
+                        <div class="card-header border-bottom">
+                            <h5 class="mb-0">Images</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Dropzone for new images -->
+                            <div class="mb-4">
+                                <label class="form-label">Upload New Images</label>
+                                <div id="listingImageDropzone" class="dropzone dropzone-custom">
+                                    <div class="dz-message needsclick">
+                                        <i class="bi bi-upload display-3"></i>
+                                        <p>Drop files here or click to upload.</p>
+                                    </div>
+                                </div>
+                                <p class="small mb-0 mt-2">
+                                    <b>Note:</b> Only JPG, JPEG, and PNG files are accepted.
+                                </p>
+                            </div>
+
+                            <!-- Existing Images Display -->
+                            <div class="mt-4">
+                                <h5>Existing Images</h5>
+                                <div class="row">
+                                    @if (Model.Images != null && Model.Images.Any())
+                                    {
+                                        foreach (var image in Model.Images)
+                                        {
+                                            <div class="col-md-3 mb-3 justify-content-around" id="image-@image.Id">
+                                                <img src="~/@image.ImagePath" class="img-thumbnail rounded " style="width:100px; height:100px;" alt="Listing Image" />
+                                                <button type="button" class="btn btn-danger btn-sm mt-2 delete-image" data-image-id="@image.Id">Delete</button>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="col-12">
+                                            <p>No images available.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-end mt-4">
+                        <input type="submit" class="btn btn-primary" value="Update" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <!-- Include Dropzone CSS/JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css"
+          integrity="sha512-cUE2ecqzy6mU2NAOeE3wDSGRLSbqEw8k5DbRh+9jSxJeBq+z/x6dXxGQNUFwkn25SivE8M5L9O+LYjg7tGD+kg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"
+            integrity="sha512-G2lpKT1R8EbHmKkFlF8S8OUvQLjbIr+3KcxwV+f+Ly5OqwCKUG4llqNxnySXK0v3g7O3bX1+zLEf/Ik6sY90Eg=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Disable autoDiscover for Dropzone.
+        Dropzone.autoDiscover = false;
+        var uploadedImagePaths = [];
+
+        var myDropzone = new Dropzone("#listingImageDropzone", {
+            url: '@Url.Action("UploadImage", "Listing")',
+            paramName: "file",
+            maxFiles: 5,
+            acceptedFiles: ".jpg,.jpeg,.png",
+            addRemoveLinks: true,
+            dictDefaultMessage: "Drop files here or click to upload.",
+            autoProcessQueue: true,
+            init: function () {
+                this.on("success", function (file, response) {
+                    if (response.filePath) {
+                        $("<input>")
+                            .attr("type", "hidden")
+                            .attr("name", "UploadedImagePaths")
+                            .val(response.filePath)
+                            .appendTo("#listingForm");
+                        uploadedImagePaths.push(response.filePath);
+                    }
+                });
+                this.on("removedfile", function (file) {
+                    // Optionally handle file removal.
+                });
+            }
+        });
+
+        // SweetAlert2 for delete confirmation using AJAX.
+        $(document).on('click', '.delete-image', function () {
+            var button = $(this);
+            var imageId = button.data('image-id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteImage", "Listing")',
+                        type: 'POST',
+                        data: { imageId: imageId },
+                        success: function (response) {
+                            if (response.success) {
+                                $("#image-" + imageId).fadeOut(function () {
+                                    $(this).remove();
+                                });
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Your image has been deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    'There was an error deleting the image.',
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function () {
+                            Swal.fire(
+                                'Error!',
+                                'There was an error deleting the image.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        });
+
+        // Cascading Country -> City Dropdown.
+        $('#countryId').change(function () {
+            var countryId = $(this).val();
+            var cityDropdown = $('#cityId');
+            cityDropdown.empty().append('<option value="">-- Select a city --</option>');
+            if (countryId) {
+                $.ajax({
+                    url: '@Url.Action("GetCities", "Listing")',
+                    type: 'GET',
+                    data: { countryId: countryId },
+                    success: function (data) {
+                        $.each(data, function (index, city) {
+                            cityDropdown.append('<option value="' + city.id + '">' + city.name + '</option>');
+                        });
+                    },
+                    error: function (err) {
+                        console.error("Error loading cities:", err);
+                    }
+                });
+            }
+        });
+    </script>
+}

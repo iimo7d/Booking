@@ -1,0 +1,216 @@
+﻿@model MyBooking
+
+@{
+    ViewData["Title"] = "My Bookings";
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+
+
+<div class="container my-5">
+    <div class="card border bg-transparent">
+        <!-- Card header -->
+        <div class="card-header bg-transparent border-bottom">
+            <h4 class="card-header-title">My Bookings</h4>
+        </div>
+
+        <!-- Card body START -->
+        <div class="card-body p-0">
+            <!-- Tabs -->
+            <ul class="nav nav-tabs nav-bottom-line nav-responsive nav-justified">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#tab-upcoming">
+                        <i class="bi bi-briefcase-fill fa-fw me-1"></i>Upcoming Booking
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-cancelled">
+                        <i class="bi bi-x-octagon fa-fw me-1"></i>Cancelled Booking
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#tab-completed">
+                        <i class="bi bi-patch-check fa-fw me-1"></i>Completed Booking
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Tabs content START -->
+            <div class="tab-content p-2 p-sm-4" id="nav-tabContent">
+                <!-- Upcoming Booking Tab -->
+                <div class="tab-pane fade show active" id="tab-upcoming">
+                    @if (Model.UpcomingBookings.Any())
+                    {
+                        <h6 class="mb-3">Upcoming booking (@Model.UpcomingBookings.Count)</h6>
+                        @foreach (var booking in Model.UpcomingBookings)
+                        {
+                            <div class="card border mb-4">
+                                <!-- Card header -->
+                                <div class="card-header border-bottom d-md-flex justify-content-md-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-lg bg-light rounded-circle flex-shrink-0">
+                                            <i class="fa-solid fa-building"></i>
+                                        </div>
+                                        <div class="ms-2">
+                                            <h6 class="card-title mb-0">@booking.Listing.Name</h6>
+                                            <ul class="nav nav-divider small">
+                                                <li class="nav-item">Booking ID: @booking.ConfirmationNo</li>
+                                                <li class="nav-item">@booking.PaymentMethod</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                                        
+                                        <form asp-action="CancelBooking" method="post" class="d-inline ms-2">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="bookingId" value="@booking.Id" />
+                                            <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <!-- Card body -->
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-in</span>
+                                            <h6 class="mb-0">@booking.CheckInDate.ToString("ddd dd MMM ")</h6>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-out</span>
+                                            <h6 class="mb-0">@booking.CheckOutDate.ToString("ddd dd MMM")</h6>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span>Booked by</span>
+                                            <h6 class="mb-0">@booking.User.FirstName @booking.User.LastName</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted p-3">No upcoming bookings found.</p>
+                    }
+                </div>
+                <!-- Upcoming Booking Tab END -->
+                <!-- Cancelled Booking Tab -->
+                <div class="tab-pane fade" id="tab-cancelled">
+                    @if (Model.CancelledBookings.Any())
+                    {
+                        <h6 class="mb-3">Cancelled booking (@Model.CancelledBookings.Count)</h6>
+                        @foreach (var booking in Model.CancelledBookings)
+                        {
+                            <div class="card border mb-4">
+                                <!-- Card header -->
+                                <div class="card-header border-bottom d-md-flex justify-content-md-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-lg bg-light rounded-circle flex-shrink-0">
+                                            <i class="fa-solid fa-hotel"></i>
+                                        </div>
+                                        <div class="ms-2">
+                                            <h6 class="card-title mb-0">@booking.Listing.Name</h6>
+                                            <ul class="nav nav-divider small">
+                                                <li class="nav-item">Booking ID: @booking.ConfirmationNo</li>
+                                                <li class="nav-item">@booking.PaymentMethod</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                               
+                                        <p class="text-danger text-md-end mb-0">Booking cancelled</p>
+                                    </div>
+                                </div>
+                                <!-- Card body -->
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-in</span>
+                                            <h6 class="mb-0">@booking.CheckInDate.ToString("ddd dd MMM")</h6>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-out</span>
+                                            <h6 class="mb-0">@booking.CheckOutDate.ToString("ddd dd MMM")</h6>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span>Booked by</span>
+                                            <h6 class="mb-0">@booking.User.FirstName @booking.User.LastName</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted p-3">No cancelled bookings found.</p>
+                    }
+                </div>
+                <!-- Cancelled Booking Tab END -->
+                <!-- Completed Booking Tab -->
+                <div class="tab-pane fade" id="tab-completed">
+                    @if (Model.CompletedBookings.Any())
+                    {
+                        <h6 class="mb-3">Completed booking (@Model.CompletedBookings.Count)</h6>
+                        @foreach (var booking in Model.CompletedBookings)
+                        {
+                            <div class="card border mb-4">
+                                <!-- Card header -->
+                                <div class="card-header border-bottom d-md-flex justify-content-md-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-lg bg-light rounded-circle flex-shrink-0">
+                                            <i class="fa-solid fa-briefcase"></i>
+                                        </div>
+                                        <div class="ms-2">
+                                            <h6 class="card-title mb-0">@booking.Listing.Name</h6>
+                                            <ul class="nav nav-divider small">
+                                                <li class="nav-item">Booking ID: @booking.ConfirmationNo</li>
+                                                <li class="nav-item">@booking.PaymentMethod</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 mt-md-0">
+                                    </div>
+                                </div>
+                                <!-- Card body -->
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-in</span>
+                                            <h6 class="mb-0">@booking.CheckInDate.ToString("ddd dd MMM")</h6>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <span>Check-out</span>
+                                            <h6 class="mb-0">@booking.CheckOutDate.ToString("ddd dd MMM")</h6>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <span>Booked by</span>
+                                            <h6 class="mb-0">@booking.User.FirstName @booking.User.LastName</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="bg-mode shadow p-4 rounded overflow-hidden">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-md-9">
+                                    <p class="text-muted">Looks like you have never booked with BOOKING.</p>
+                                    <h4 class="mb-2">When you book your trip, it will be shown here.</h4>
+                                    <a href="@Url.Action("Index", "Listing")" class="btn btn-primary-soft mb-0">Start booking now</a>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <img src="~/assets/images/element/17.svg" class="mb-n5" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <!-- Completed Booking Tab END -->
+            </div>
+            <!-- Tabs content END -->
+        </div>
+    </div>
+</div>

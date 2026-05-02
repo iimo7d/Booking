@@ -1,0 +1,90 @@
+﻿@using Booking.Enums
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@model IEnumerable<JoinUs>
+
+
+<div class="container card shadow mt-4">
+    <div class="card-header text-white py-3">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center">
+            <h4 class="mb-0">Requests</h4>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Responsive table wrapper -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Listing Name</th>
+                        <th>Listing Rate</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in Model)
+                    {
+                        <tr>
+                            <td>@request.Id</td>
+                            <td>
+                                @(request.Agent != null
+                                    ? (request.Agent.FirstName + " " + request.Agent.LastName)
+                                    : "N/A")
+                            </td>
+                            <td>
+                                @(request.Listing != null
+                                    ? request.Listing.Name
+                                    : "N/A")
+                            </td>
+                            <td>
+                                @(request.Listing != null
+                                    ? request.Listing.Rating.ToString()
+                                    : "N/A")
+                            </td>
+                            <td>
+                                @if (request.Status == Status.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark">@request.Status</span>
+                                }
+                                else if (request.Status == Status.Approved)
+                                {
+                                    <span class="badge bg-success">@request.Status</span>
+                                }
+                                else if (request.Status == Status.Rejected)
+                                {
+                                    <span class="badge bg-danger">@request.Status</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@request.Status</span>
+                                }
+                            </td>
+                            <td>
+                                @if (request.Status == Status.Pending)
+                                {
+                                    <a asp-action="Approve" asp-route-id="@request.Id" class="btn btn-success btn-sm me-1 mb-1">
+                                        <i class="fa fa-check"></i>
+                                    </a>
+                                    <a asp-action="Reject" asp-route-id="@request.Id" class="btn btn-danger btn-sm me-1 mb-1">
+                                        <i class="fa fa-times"></i>
+                                    </a>
+                                }
+                                <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-primary btn-sm mb-1">
+                                    <i class="fa fa-info-circle"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,36 @@
+﻿@model List<Room>
+
+<h2>Your Cart</h2>
+@if (!Model.Any())
+{
+    <p>No rooms in cart.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Room No</th>
+                <th>Listing</th>
+                <th>Price/Night</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var room in Model)
+            {
+                <tr>
+                    <td>@room.RoomNo</td>
+                    <td>@room.Listing?.Name</td>
+                    <td>@room.PricePerNight.ToString("C")</td>
+                    <td>
+                        <a asp-controller="Booking" asp-action="RemoveRoomFromCart" asp-route-roomId="@room.Id">
+                            Remove
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a asp-controller="Booking" asp-action="Checkout">Checkout</a>
+}

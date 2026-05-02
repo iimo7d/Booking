@@ -1,0 +1,318 @@
+﻿@{
+    ViewData["Title"] = "Details";
+}
+
+
+@using Booking.Enums
+@using System.Security.Claims
+@using Booking.ViewModels.Listing
+@model JoinUs
+
+
+
+
+<!-- Listing Header Section -->
+<section class="py-0 pt-sm-5">
+    <div class="container position-relative">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-lg-flex justify-content-lg-between mb-1">
+                    <div class="mb-2 mb-lg-0">
+                        <h2 class="fs-2">@Model.Listing.Name</h2>
+                        <h5> Name : @Model.Agent.FirstName @Model.Agent.LastName</h5>
+                        <p class="fw-bold mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            @Model.Listing.Street, @Model.Listing.City.Name - @Model.Listing.City.Country.Name
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Gallery Section -->
+<section class="card-grid pt-0">
+    <div class="container">
+        <div class="row g-2">
+            @{
+                var mainImage = Model.Listing.Images.FirstOrDefault();
+            }
+            <div class="col-md-6">
+                <a data-glightbox data-gallery="gallery" href="~/@mainImage?.ImagePath">
+                    <div class="card card-grid-lg card-element-hover card-overlay-hover overflow-hidden"
+                         style="background-image:url('@Url.Content($"~/{mainImage?.ImagePath}")'); background-position: center left; background-size: cover;">
+                        <div class="hover-element position-absolute w-100 h-100">
+                            <i class="bi bi-fullscreen fs-6 text-white position-absolute top-50 start-50 translate-middle bg-dark rounded-1 p-2 lh-1"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6">
+                <div class="row g-2">
+                    @foreach (var image in Model.Listing.Images.Skip(1).Take(3))
+                    {
+                        <div class="col-md-6">
+                            <a data-glightbox data-gallery="gallery" href="~/@image.ImagePath">
+                                <div class="card card-grid-sm card-element-hover card-overlay-hover overflow-hidden"
+                                     style="background-image:url('@Url.Content($"~/{image.ImagePath}")'); background-position: center left; background-size: cover;">
+                                    <div class="hover-element position-absolute w-100 h-100">
+                                        <i class="bi bi-fullscreen fs-6 text-white position-absolute top-50 start-50 translate-middle bg-dark rounded-1 p-2 lh-1"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Hotel & Services Section -->
+<section class="pt-0 container">
+    <div class="container-fluid" data-sticky-container>
+        <div class="row g-4 g-xl-5">
+            <!-- Left Content -->
+            <div class="col-xl-7 order-1">
+                <div class="vstack gap-5">
+                    <!-- About Hotel -->
+                    <div class="card bg-transparent">
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="mb-0">Reson</h3>
+                        </div>
+                        <p class="mb-3">@Model.Reason</p>
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="mb-0">About This Hotel</h3>
+                        </div>
+                        <p class="mb-3">@Model.Listing.Description</p>
+
+                        <h5 class="fw-light mb-2">Room Types</h5>
+                        <ul class="list-group list-group-borderless mb-0">
+                            @if (Model.Listing.ListingRoomClasses?.Any() == true)
+                            {
+                                foreach (var lrc in Model.Listing.ListingRoomClasses)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        @lrc.RoomClass.Name
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#amenityModal-@lrc.RoomClass.Id">View Amenities</a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                    <!-- Services -->
+                    <div class="card bg-transparent">
+                        <div class="card-header border-bottom bg-transparent px-0 pt-0">
+                            <h3 class="card-title mb-0">Services</h3>
+                        </div>
+                        <div class="card-body pt-4 p-0">
+                            <div class="row g-4">
+                                @if (Model.Listing.ListingServices?.Any() == true)
+                                {
+                                    var groupedServices = Model.Listing.ListingServices.GroupBy(ls => ls.Service.Type);
+                                    foreach (var group in groupedServices)
+                                    {
+                                        <div class="col-sm-6">
+                                            <h6>
+                                                @switch (group.Key)
+                                                {
+                                                    case Booking.Enums.ServiceType.Language:
+                                                        @:<i class="fa-solid fa-language me-2"></i>Language
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Activities:
+                                                        @:<i class="fa-solid fa-biking me-2"></i>Activities
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Payment:
+                                                        @:<i class="fa-solid fa-credit-card me-2"></i>Payment
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Services:
+                                                        @:<i class="fa-solid fa-concierge-bell me-2"></i>Service
+                                                        break;
+                                                    case Booking.Enums.ServiceType.Safety:
+                                                        @:<i class="bi bi-shield-fill-check me-2"></i>Safety
+                                                        break;
+                                                    default:
+                                                        @:Other
+                                                        break;
+                                                }
+                                            </h6>
+                                            <ul class="list-group list-group-borderless mt-2 mb-0">
+                                                @foreach (var ls in group)
+                                                {
+                                                    <li class="list-group-item pb-0">
+                                                        <i class="fa-solid fa-check-circle text-success me-2"></i> @ls.Service.Description
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+            </div>
+            <!-- Right Side Content -->
+            <aside class="col-xl-5 order-xl-2">
+                <!-- OwnerShip Proof -->
+                <div class="mt-4 d-none d-xl-block">
+                    <h4>OwnerShip Proof</h4>
+                    <div class="card shadow rounded-3 overflow-auto">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-sm-6 col-md-12 col-lg-6">
+                                <img src="@Url.Content($"~/{Model?.OwnerShipProof}" ?? "~/assets/images/placeholder.png")"
+                                     alt="OwnerShip Proof"
+                                     class="img-thumbnail rounded"
+                                     style="cursor:pointer;"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#ownershipModal">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goverment Certificate -->
+                <div class="mt-4 d-none d-xl-block">
+                    <h4>Goverment Certificate</h4>
+                    <div class="card shadow rounded-3 overflow-auto">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-sm-6 col-md-12 col-lg-6">
+                                <img src="@Url.Content($"~/{Model?.GovermentCertificate}" ?? "~/assets/images/placeholder.png")"
+                                     alt="Goverment Certificate"
+                                     class="img-thumbnail"
+                                     style="cursor:pointer;"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#govCertModal">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Identity Proof -->
+                <div class="mt-4 d-none d-xl-block">
+                    <h4>Identity Proof</h4>
+                    <div class="card shadow rounded-3 overflow-auto">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-sm-6 col-md-12 col-lg-6">
+                                <img src="@Url.Content($"~/{Model?.IdentityProof}" ?? "~/assets/images/placeholder.png")"
+                                     alt="Identity Proof"
+                                     class="img-thumbnail"
+                                     style="cursor:pointer;"
+                                     data-bs-toggle="modal"
+                                     data-bs-target="#identityModal">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- Identity Proof Card -->
+    </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Amenity Modals -->
+@foreach (var lrc in Model.Listing.ListingRoomClasses)
+{
+    <div class="modal fade" id="amenityModal-@lrc.RoomClass.Id" tabindex="-1" aria-labelledby="amenityModalLabel-@lrc.RoomClass.Id" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="amenityModalLabel-@lrc.RoomClass.Id">Amenities for @lrc.RoomClass.Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                        @if (lrc.RoomClass.RoomClassAmenities?.Any() == true)
+                        {
+                            foreach (var amenity in lrc.RoomClass.RoomClassAmenities)
+                            {
+                                <li class="list-group-item">@amenity.Amenity.Name</li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item">No amenities available.</li>
+                        }
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="ownershipModal" tabindex="-1" aria-labelledby="ownershipModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ownershipModalLabel">OwnerShip Proof</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img src="@Url.Content($"~/{Model?.OwnerShipProof}" ?? "~/assets/images/placeholder.png")" class="img-fluid" alt="OwnerShip Proof">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="govCertModal" tabindex="-1" aria-labelledby="govCertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="govCertModalLabel">Goverment Certificate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img src="@Url.Content($"~/{Model?.GovermentCertificate}" ?? "~/assets/images/placeholder.png")" class="img-fluid" alt="Goverment Certificate">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="identityModal" tabindex="-1" aria-labelledby="identityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="identityModalLabel">Identity Proof</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img src="@Url.Content($"~/{Model?.IdentityProof}" ?? "~/assets/images/placeholder.png")" class="img-fluid" alt="Identity Proof">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+

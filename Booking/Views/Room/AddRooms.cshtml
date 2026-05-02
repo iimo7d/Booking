@@ -1,0 +1,186 @@
+﻿@using Booking.ViewModels.Room
+@model MultiRoomAssignmentVM
+
+@{
+    ViewData["Title"] = "Add Rooms to Listing";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Ensure your layout loads jQuery and Bootstrap's JS/CSS.
+    // Build a string containing the room class <option> elements.
+    var roomClassOptions = string.Join("", Model.RoomClassList.Select(item => $"<option value='{item.Value}'>{item.Text}</option>"));
+}
+
+
+<section class="pt-0">
+    <div class="container">
+        <!-- Background image -->
+        <div class="rounded-3 p-3 p-sm-5" style="background-image: url(@Url.Content("~/assets/images/bg/05.jpg")); background-position: center center; background-repeat: no-repeat; background-size: cover;">
+            <!-- Banner title -->
+            <div class="row my-2 my-xl-5">
+                <div class="col-md-8 mx-auto">
+                    <h1 class="text-center text-white">@ViewBag.ListingName  </h1>
+                    <h1 class="text-center text-white">Add Rooms </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="pt-0">
+<div class="container">
+    <form asp-action="AddRooms" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ListingId)
+
+        <!-- Accordion container for room entries -->
+        <div class="accordion" id="roomsAccordion">
+            @for (int i = 0; i < Model.Rooms.Count; i++)
+            {
+                <div class="accordion-item room-entry">
+                    <h2 class="accordion-header" id="heading@i">
+                        <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@i" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@i">
+                            Room @(i + 1)
+                        </button>
+                    </h2>
+                    <div id="collapse@i" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@i" data-bs-parent="#roomsAccordion">
+                        <div class="accordion-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Room Number</label>
+                                    <input asp-for="Rooms[i].RoomNo" class="form-control" required />
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].RoomNo, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Adults Capacity</label>
+                                    <input asp-for="Rooms[i].AdultsCapacity" class="form-control" required type="number" />
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].AdultsCapacity, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Children Capacity</label>
+                                    <input asp-for="Rooms[i].ChildrenCapacity" class="form-control" type="number" required />
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].ChildrenCapacity, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Price Per Night</label>
+                                    <input asp-for="Rooms[i].PricePerNight" class="form-control" type="number" step="0.01" required />
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].PricePerNight, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Room Size</label>
+                                    <input asp-for="Rooms[i].RoomSize" class="form-control" type="number" required />
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].RoomSize, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Room Class</label>
+                                    <select asp-for="Rooms[i].SelectedRoomClassId" class="form-select" asp-items="Model.RoomClassList" required>
+                                        <option value="">-- Select Room Class --</option>
+                                    </select>
+                                    @Html.ValidationMessageFor(m => m.Rooms[i].SelectedRoomClassId, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Room Images</label>
+                                <input asp-for="Rooms[i].RoomImages" class="form-control" type="file" multiple required />
+                                @Html.ValidationMessageFor(m => m.Rooms[i].RoomImages, "", new { @class = "text-danger" })
+                            </div>
+                            <!-- Remove Room Button -->
+                            <button type="button" class="btn btn-outline-danger remove-room ">Remove Room</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Add new room button -->
+        <div class="mt-4">
+            <button type="button" id="addRoomBtn" class="btn btn-outline-primary">Add Room</button>
+        </div>
+
+        <div class="mt-4 text-end">
+            <button type="submit" class="btn btn-primary">Save Rooms</button>
+        </div>
+    </form>
+</div>
+</section>
+
+@section Scripts {
+    <script>
+                $(document).ready(function () {
+                    // Add a new room accordion item dynamically.
+                    $("#addRoomBtn").click(function () {
+                        var index = $("#roomsAccordion .room-entry").length;
+                        var template = `
+        <div class="accordion-item room-entry">
+            <h2 class="accordion-header" id="heading${index}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false" aria-controls="collapse${index}">
+                    Room ${index + 1}
+                </button>
+            </h2>
+            <div id="collapse${index}" class="accordion-collapse collapse" aria-labelledby="heading${index}" data-bs-parent="#roomsAccordion">
+                <div class="accordion-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Room Number</label>
+                            <input name="Rooms[${index}].RoomNo" class="form-control" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Adults Capacity</label>
+                            <input name="Rooms[${index}].AdultsCapacity" class="form-control" type="number" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Children Capacity</label>
+                            <input name="Rooms[${index}].ChildrenCapacity" class="form-control" type="number" required />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Price Per Night</label>
+                            <input name="Rooms[${index}].PricePerNight" class="form-control" type="number" step="0.01" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Room Size</label>
+                            <input name="Rooms[${index}].RoomSize" class="form-control" type="number" required />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Room Class</label>
+                            <select name="Rooms[${index}].SelectedRoomClassId" class="form-select" required>
+                                <option value="">-- Select Room Class --</option>
+                                ${"@Html.Raw(roomClassOptions)"}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Room Images</label>
+                        <input name="Rooms[${index}].RoomImages" class="form-control" type="file" multiple required />
+                    </div>
+                    <button type="button" class="btn btn-outline-danger remove-room ">Remove Room</button>
+                </div>
+            </div>
+        </div>`;
+                        $("#roomsAccordion").append(template);
+                    });
+
+                    // Remove a room accordion item and re-index the remaining items.
+                    $("#roomsAccordion").on("click", ".remove-room", function () {
+                        $(this).closest(".room-entry").remove();
+                        // Re-index the remaining room entries.
+                        $("#roomsAccordion .room-entry").each(function (i) {
+                            // Update header text and attributes.
+                            $(this).find(".accordion-button").html(`Room ${i + 1}`);
+                            $(this).find(".accordion-header").attr("id", "heading" + i);
+                            $(this).find(".accordion-collapse")
+                                .attr("id", "collapse" + i)
+                                .attr("aria-labelledby", "heading" + i);
+                            // Re-index the input names.
+                            $(this).find("input, select").each(function () {
+                                var name = $(this).attr("name");
+                                if (name) {
+                                    var newName = name.replace(/\[\d+\]/, "[" + i + "]");
+                                    $(this).attr("name", newName);
+                                }
+                            });
+                        });
+                    });
+                });
+    </script>
+}
