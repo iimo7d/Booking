@@ -339,6 +339,7 @@
         var uploadedImagePaths = [];
 
         // Initialize Dropzone on the #listingImageDropzone element.
+        var csrfToken = $('#joinUsForm input[name="__RequestVerificationToken"]').val();
         var myDropzone = new Dropzone("#listingImageDropzone", {
             url: '@Url.Action("UploadImage", "JoinUs")', // Ensure your controller action name matches.
             paramName: "file", // Name used to transfer the file
@@ -347,6 +348,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true, // Automatically upload files upon drop
+            headers: { 'RequestVerificationToken': csrfToken }
             init: function () {
                 this.on("success", function (file, response) {
                     // Expecting JSON response with a 'filePath' property.

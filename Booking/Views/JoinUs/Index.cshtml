@@ -68,12 +68,18 @@
                             <td>
                                 @if (request.Status == Status.Pending)
                                 {
-                                    <a asp-action="Approve" asp-route-id="@request.Id" class="btn btn-success btn-sm me-1 mb-1">
-                                        <i class="fa fa-check"></i>
-                                    </a>
-                                    <a asp-action="Reject" asp-route-id="@request.Id" class="btn btn-danger btn-sm me-1 mb-1">
-                                        <i class="fa fa-times"></i>
-                                    </a>
+                                    <form asp-action="Approve" asp-route-id="@request.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-success btn-sm me-1 mb-1">
+                                            <i class="fa fa-check"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="Reject" asp-route-id="@request.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm me-1 mb-1">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </form>
                                 }
                                 <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-primary btn-sm mb-1">
                                     <i class="fa fa-info-circle"></i>

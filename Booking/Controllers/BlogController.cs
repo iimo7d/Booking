@@ -1,5 +1,6 @@
 ﻿using Booking.Data;
 using Booking.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,6 +56,8 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(Blogs blog, IFormFile? image, IFormFile? video)
         {
             if (blog == null || string.IsNullOrEmpty(blog.Title) || string.IsNullOrEmpty(blog.Content))
@@ -101,6 +104,8 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, Blogs model, IFormFile? image, IFormFile? video)
         {
             if (id != model.Id) return Json(new { success = false, message = "Invalid Blog ID." });
@@ -169,6 +174,8 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var blog = await db.Blogs.FindAsync(id);

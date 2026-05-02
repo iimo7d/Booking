@@ -8,6 +8,7 @@ using System.Security.Claims;
 namespace Booking.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class AgentController : Controller
     {
         private readonly UserManager<AppUser> _userManager;

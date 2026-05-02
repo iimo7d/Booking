@@ -1,5 +1,6 @@
 ﻿using Booking.Data;
 using Booking.Areas.Admin.ViewModels; // تأكد من أن هذا الـ namespace موجود
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 namespace Booking.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class GuestController : Controller
     {
         private readonly Context db;

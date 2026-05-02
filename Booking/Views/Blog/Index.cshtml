@@ -175,7 +175,10 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('@Url.Action("Delete", "Blog")', { id: blogId }, function (result) {
+                    $.post('@Url.Action("Delete", "Blog")', {
+                        id: blogId,
+                        __RequestVerificationToken: $('#createBlogForm input[name="__RequestVerificationToken"]').val()
+                    }, function (result) {
                         Swal.fire(result.success ? 'Deleted!' : 'Error!', result.message, result.success ? 'success' : 'error')
                             .then(() => { if (result.success) location.reload(); });
                     });

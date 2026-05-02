@@ -119,6 +119,7 @@
     </style>
 </head>
 <body>
+    @Html.AntiForgeryToken()
     <!-- Header START -->
     <header class="navbar-light header-sticky">
         <nav class="navbar navbar-expand-xl">
@@ -330,10 +331,20 @@
 
 
 
+        function getCsrfToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        }
+
         // Add a room to the cart
         async function addRoom(roomId) {
             try {
-                const response = await fetch(`/Booking/AddRoomToCart?roomId=${roomId}`, { method: 'POST' });
+                const response = await fetch('/Booking/AddRoomToCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `roomId=${encodeURIComponent(roomId)}&__RequestVerificationToken=${encodeURIComponent(getCsrfToken() || '')}`
+                });
                 const result = await response.json();
 
                 if (result.success) {
@@ -369,7 +380,13 @@
         // Remove a room from the cart (Refreshes Page)
         async function removeRoom(roomId) {
             try {
-                const response = await fetch(`/Booking/RemoveRoomFromCart?roomId=${roomId}`, { method: 'POST' });
+                const response = await fetch('/Booking/RemoveRoomFromCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `roomId=${encodeURIComponent(roomId)}&__RequestVerificationToken=${encodeURIComponent(getCsrfToken() || '')}`
+                });
                 const result = await response.json();
 
                 if (result.success) {
@@ -394,7 +411,13 @@
         // Clear the cart (Refreshes Page)
         async function clearCart() {
             try {
-                const response = await fetch(`/Booking/ClearCart`, { method: 'GET' });
+                const response = await fetch('/Booking/ClearCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `__RequestVerificationToken=${encodeURIComponent(getCsrfToken() || '')}`
+                });
                 Swal.fire({
                     title: "Cart Cleared!",
                     text: "All rooms have been removed from your cart.",

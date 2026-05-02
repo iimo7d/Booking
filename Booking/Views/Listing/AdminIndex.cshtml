@@ -6,6 +6,7 @@
 }
 
 <div class="page-content-wrapper p-xxl-4">
+    @Html.AntiForgeryToken()
     <!-- Title -->
     <div class="row">
         <div class="col-12 mb-4 mb-sm-5">
@@ -113,11 +114,12 @@
         $(document).on('click', '.toggleStatusButton', function (e) {
             e.preventDefault();
             var listingId = $(this).data('listing-id');
+            var token = $('input[name="__RequestVerificationToken"]').val();
 
             $.ajax({
                 url: '@Url.Action("ToggleStatus", "Listing", new { area = "" })',
                 type: 'POST',
-                data: { id: listingId },
+                data: { id: listingId, __RequestVerificationToken: token },
                 success: function (response) {
                     if (response.success) {
                         Swal.fire({

@@ -140,6 +140,7 @@
 
     <script>
         $(document).ready(function () {
+            var csrfToken = $('input[name="__RequestVerificationToken"]').val();
 
             // Function to re-index room accordion items.
             function reIndexRooms() {
@@ -179,7 +180,7 @@
                         $.ajax({
                             type: "POST",
                             url: "@Url.Action("DeleteRoomImage", "Room")",
-                            data: { imageId: imageId },
+                            data: { imageId: imageId, __RequestVerificationToken: csrfToken },
                             success: function (response) {
                                 Swal.fire('Deleted!', 'The image has been deleted.', 'success');
                                 // Remove the image container from the UI.
@@ -217,7 +218,7 @@
                         $.ajax({
                             type: "POST",
                             url: "@Url.Action("DeleteRoom", "Room")",
-                            data: { id: roomId },
+                            data: { id: roomId, __RequestVerificationToken: csrfToken },
                             success: function (response) {
                                 Swal.fire('Deleted!', 'The room has been deleted.', 'success');
                                 $roomEntry.remove();

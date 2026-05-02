@@ -67,30 +67,50 @@ namespace Booking.Controllers
                 .Include(x => x.Listing)
                 .FirstOrDefaultAsync(r => r.Id == roomId);
 
-            var roomClasses = await db.RoomClasses
-                .Where(rc => db.ListingRoomClasses.Any(lrc => lrc.RoomClassId == rc.Id && lrc.ListingId == room.Listing.Id))
-                .ToListAsync();
             if (room == null)
             {
                 return NotFound();
             }
+
+            // Agents may only edit rooms belonging to their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var currentUser = await userManager.GetUserAsync(User);
+                if (currentUser == null || room.Listing?.AgentId != currentUser.Id)
+                {
+                    return Forbid();
+                }
+            }
+
+            var roomClasses = await db.RoomClasses
+                .Where(rc => db.ListingRoomClasses.Any(lrc => lrc.RoomClassId == rc.Id && lrc.ListingId == room.Listing.Id))
+                .ToListAsync();
 
             ViewBag.RoomClasses = new SelectList(roomClasses, "Id", "Name");
             return PartialView("_RoomEditPartial", room);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> EditRoom(Room updatedRoom, IFormFileCollection RoomImages)
         {
-       
-
             var room = await db.Rooms.Include(r => r.Images)
                 .Include(x => x.Listing)
                 .FirstOrDefaultAsync(r => r.Id == updatedRoom.Id);
             if (room == null)
             {
                 return NotFound();
+            }
+
+            // Agents may only edit rooms belonging to their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var currentUser = await userManager.GetUserAsync(User);
+                if (currentUser == null || room.Listing?.AgentId != currentUser.Id)
+                {
+                    return Forbid();
+                }
             }
 
             
@@ -143,6 +163,14 @@ namespace Booking.Controllers
                 if (!listing.IsActive)
                     return BadRequest("Cannot add rooms to an inactive listing.");
 
+                // Agents may only add rooms to their own listing
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    var currentUser = await userManager.GetUserAsync(User);
+                    if (currentUser == null || listing.AgentId != currentUser.Id)
+                        return Forbid();
+                }
+
                 var roomClasses = await db.RoomClasses
                     .Where(rc => db.ListingRoomClasses.Any(lrc => lrc.RoomClassId == rc.Id && lrc.ListingId == listingId))
                     .ToListAsync();
@@ -169,6 +197,7 @@ namespace Booking.Controllers
 
         // POST: Room/AddRooms
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> AddRooms(MultiRoomAssignmentVM model)
         {
@@ -180,6 +209,14 @@ namespace Booking.Controllers
 
                 if (!listing.IsActive)
                     return BadRequest("Cannot add rooms to an inactive Hotel.");
+
+                // Agents may only add rooms to their own listing
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    var currentUser = await userManager.GetUserAsync(User);
+                    if (currentUser == null || listing.AgentId != currentUser.Id)
+                        return Forbid();
+                }
 
             
                 foreach (var roomVm in model.Rooms)
@@ -236,6 +273,14 @@ namespace Booking.Controllers
                 if (listing == null)
                     return NotFound("Hotel not found.");
 
+                // Agents may only edit rooms for their own listing
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    var currentUser = await userManager.GetUserAsync(User);
+                    if (currentUser == null || listing.AgentId != currentUser.Id)
+                        return Forbid();
+                }
+
                 var rooms = await db.Rooms
                     .Where(r => r.ListingId == listingId)
                     .ToListAsync();
@@ -279,6 +324,7 @@ namespace Booking.Controllers
 
         // POST: Room/EditRooms
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> EditRooms(MultiRoomAssignmentVM model)
         {
@@ -294,8 +340,13 @@ namespace Booking.Controllers
                 var user = await userManager.GetUserAsync(User);
                 if (user == null)
                     return Unauthorized();
-                if (user.Id != listing.AgentId)
-                    return Unauthorized("You are not authorized to edit rooms for this Hotel.");
+
+                // Agents may only edit rooms for their own listing; Admins bypass this check
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    if (user.Id != listing.AgentId)
+                        return Unauthorized("You are not authorized to edit rooms for this Hotel.");
+                }
 
                 foreach (var roomVm in model.Rooms)
                 {
@@ -341,14 +392,23 @@ namespace Booking.Controllers
         #region Delete Room & Delete Room Image
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> DeleteRoom(int id)
         {
             try
             {
-                var room = await db.Rooms.FindAsync(id);
+                var room = await db.Rooms.Include(r => r.Listing).FirstOrDefaultAsync(r => r.Id == id);
                 if (room == null)
                     return NotFound();
+
+                // Agents may only delete rooms belonging to their own listing
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    var currentUser = await userManager.GetUserAsync(User);
+                    if (currentUser == null || room.Listing?.AgentId != currentUser.Id)
+                        return Forbid();
+                }
 
                 // Retrieve associated images.
                 var images = await db.RoomImages.Where(img => img.RoomId == id).ToListAsync();
@@ -381,14 +441,25 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> DeleteRoomImage(int imageId)
         {
             try
             {
-                var image = await db.RoomImages.FindAsync(imageId);
+                var image = await db.RoomImages
+                    .Include(img => img.Room).ThenInclude(r => r.Listing)
+                    .FirstOrDefaultAsync(img => img.Id == imageId);
                 if (image == null)
                     return NotFound();
+
+                // Agents may only delete images from their own listing's rooms
+                if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+                {
+                    var currentUser = await userManager.GetUserAsync(User);
+                    if (currentUser == null || image.Room?.Listing?.AgentId != currentUser.Id)
+                        return Forbid();
+                }
 
                 var relativePath = image.ImagePath.TrimStart('/');
                 var filePath = Path.Combine(env.WebRootPath, relativePath.Replace("/", Path.DirectorySeparatorChar.ToString()));

@@ -24,9 +24,10 @@ else
                     <td>@room.Listing?.Name</td>
                     <td>@room.PricePerNight.ToString("C")</td>
                     <td>
-                        <a asp-controller="Booking" asp-action="RemoveRoomFromCart" asp-route-roomId="@room.Id">
-                            Remove
-                        </a>
+                        <form asp-controller="Booking" asp-action="RemoveRoomFromCart" asp-route-roomId="@room.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link p-0">Remove</button>
+                        </form>
                     </td>
                 </tr>
             }

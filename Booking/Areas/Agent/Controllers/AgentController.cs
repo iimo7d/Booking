@@ -2,6 +2,7 @@
 using Booking.Data;
 using Booking.Models;
 using Booking.ViewModels.Listing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Booking.Areas.Agent.Controllers
 {
     [Area("Agent")]
+    [Authorize(Roles = "Agent")]
     public class AgentController : Controller
     {
         private readonly Context db;

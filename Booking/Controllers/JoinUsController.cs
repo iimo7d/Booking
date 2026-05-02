@@ -54,6 +54,7 @@ namespace Booking.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Index()
         {
             var requests = db.JoinUs
@@ -65,6 +66,7 @@ namespace Booking.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Details(int id)
         {
             var request = await db.JoinUs
@@ -99,6 +101,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "User")]
 
         public async Task<IActionResult> CreateRequest(JoinUsRequest model)
@@ -240,6 +243,8 @@ namespace Booking.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Approve(int id)
         {
@@ -298,6 +303,8 @@ namespace Booking.Controllers
 
 
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Reject(int id)
         {
@@ -331,6 +338,8 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "User")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)

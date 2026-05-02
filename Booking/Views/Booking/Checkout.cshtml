@@ -145,6 +145,7 @@
                         </div>
                         <div class="card-body p-4">
                             <form class="row g-4" asp-action="Checkout" method="post">
+                                @Html.AntiForgeryToken()
                                 <div class="form-control-border form-control-transparent form-fs-md">
                                     <label class="form-label">First Name</label>
                                     <input type="text" value="@Model.AppUser.FirstName" class="form-control form-control-lg" disabled placeholder="Enter your name">

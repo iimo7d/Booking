@@ -22,6 +22,7 @@
         <div class="row">
             <div class="col-lg-10 mx-auto">
                 <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="vstack gap-4" id="listingForm">
+                    @Html.AntiForgeryToken()
                     @Html.HiddenFor(m => m.Id)
                     <!-- Owner Detail Card START -->
                     <div class="card shadow">
@@ -207,6 +208,7 @@
         Dropzone.autoDiscover = false;
         var uploadedImagePaths = [];
 
+        var csrfToken = $('#listingForm input[name="__RequestVerificationToken"]').val();
         var myDropzone = new Dropzone("#listingImageDropzone", {
             url: '@Url.Action("UploadImage", "Listing")',
             paramName: "file",
@@ -215,6 +217,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true,
+            headers: { 'RequestVerificationToken': csrfToken },
             init: function () {
                 this.on("success", function (file, response) {
                     if (response.filePath) {
@@ -249,7 +252,7 @@
                     $.ajax({
                         url: '@Url.Action("DeleteImage", "Listing")',
                         type: 'POST',
-                        data: { imageId: imageId },
+                        data: { imageId: imageId, __RequestVerificationToken: csrfToken },
                         success: function (response) {
                             if (response.success) {
                                 $("#image-" + imageId).fadeOut(function () {

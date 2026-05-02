@@ -204,6 +204,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(ListingVM model)
         {
@@ -319,6 +320,16 @@ namespace Booking.Controllers
                 return NotFound();
             }
 
+            // Agents may only edit their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var currentUser = await userManager.GetUserAsync(User);
+                if (currentUser == null || listing.AgentId != currentUser.Id)
+                {
+                    return Forbid();
+                }
+            }
+
             // Map Listing properties to your Edit view model.
             var model = new EditVM
             {
@@ -369,11 +380,14 @@ namespace Booking.Controllers
             }
 
             var user = await userManager.GetUserAsync(User);
-            if (user == null || !await userManager.IsInRoleAsync(user, "Admin"))
+            if (user == null)
             {
                 PopulateViewData();
                 return View(model);
             }
+
+            bool isAdmin = await userManager.IsInRoleAsync(user, "Admin");
+            bool isAgent = await userManager.IsInRoleAsync(user, "Agent");
 
             var listing = await db.Listings
                 .Include(l => l.ListingServices)
@@ -384,6 +398,15 @@ namespace Booking.Controllers
             if (listing == null)
             {
                 return NotFound();
+            }
+
+            // Agents may only edit their own listing; non-Admin/Agent cannot edit
+            if (!isAdmin)
+            {
+                if (!isAgent || listing.AgentId != user.Id)
+                {
+                    return Forbid();
+                }
             }
 
             // Update scalar properties.
@@ -464,15 +487,28 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Route("Listing/DeleteImage")]
         [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> DeleteImage(int imageId)
         {
-            // Find the image by its ID.
-            var image = await db.ListingImages.FindAsync(imageId);
+            // Find the image by its ID (include listing for ownership check).
+            var image = await db.ListingImages
+                .Include(img => img.Listing)
+                .FirstOrDefaultAsync(img => img.Id == imageId);
             if (image == null)
             {
                 return NotFound(new { success = false, message = "Image not found." });
+            }
+
+            // Agents may only delete images from their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var currentUser = await userManager.GetUserAsync(User);
+                if (currentUser == null || image.Listing?.AgentId != currentUser.Id)
+                {
+                    return Forbid();
+                }
             }
 
 
@@ -491,6 +527,7 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ToggleStatus(int id)
         {
@@ -529,6 +566,8 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Agent")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file == null || file.Length == 0)

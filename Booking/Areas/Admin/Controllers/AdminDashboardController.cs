@@ -1,4 +1,5 @@
 ﻿using Booking.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -6,6 +7,7 @@ using Newtonsoft.Json;
 namespace Booking.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class AdminDashboardController : Controller
     {
         private readonly Context db;
@@ -19,7 +21,7 @@ namespace Booking.Areas.Admin.Controllers
         {
 
             #region rooms
-            var bookedRooms = db.Rooms.Where(r => r.IsBooked == false).Count();
+            var bookedRooms = db.Rooms.Where(r => r.IsBooked == true).Count();
             var totalRooms = db.Rooms.Count();
             var freeRooms = totalRooms - bookedRooms;
 

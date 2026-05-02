@@ -23,6 +23,7 @@
         <div class="row">
             <div class="col-lg-10 mx-auto">
                 <form asp-action="Create" method="post" enctype="multipart/form-data" class="vstack gap-4" id="listingForm">
+                    @Html.AntiForgeryToken()
                     <!-- Owner Detail START -->
                     <div class="card shadow">
                         <!-- Card header -->
@@ -190,6 +191,7 @@
         var uploadedImagePaths = [];
 
         // Initialize Dropzone on the #listingImageDropzone element.
+        var csrfToken = $('#listingForm input[name="__RequestVerificationToken"]').val();
         var myDropzone = new Dropzone("#listingImageDropzone", {
             url: '@Url.Action("UploadImage", "Listing")', // Ensure your controller action name matches.
             paramName: "file", // Name used to transfer the file
@@ -198,6 +200,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true, // Automatically upload files upon drop
+            headers: { 'RequestVerificationToken': csrfToken }
             init: function () {
                 this.on("success", function (file, response) {
                     // Expecting JSON response with a 'filePath' property.

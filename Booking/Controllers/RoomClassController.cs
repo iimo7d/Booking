@@ -39,8 +39,8 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-
         public async Task<IActionResult> Create(RoomClass roomClass)
         {
             await db.RoomClasses.AddAsync(roomClass);
@@ -49,8 +49,8 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-
         public async Task<IActionResult> Edit(int id, RoomClass model)
         {
             if (id != model.Id)
@@ -72,8 +72,8 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-
         public async Task<IActionResult> Delete(int id)
         {
             var roomClass = await db.RoomClasses.FindAsync(id);
@@ -86,9 +86,21 @@ namespace Booking.Controllers
             return Json(new { success = true, message = "Room class deleted successfully." });
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin,Agent,User")]
         public async Task<IActionResult> MultiAssignAmenity(int listingId)
         {
+            var listing = await db.Listings.FindAsync(listingId);
+
+            // Agents may only assign amenities for their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var currentUser = await userManager.GetUserAsync(User);
+                if (currentUser == null || listing == null || listing.AgentId != currentUser.Id)
+                {
+                    return Forbid();
+                }
+            }
+
             var roomClasses = await db.RoomClasses
                 .Where(rc => db.ListingRoomClasses.Any(lrc => lrc.RoomClassId == rc.Id && lrc.ListingId == listingId))
                 .ToListAsync();
@@ -114,10 +126,7 @@ namespace Booking.Controllers
                 }).ToList()
             };
 
-
-            var listing = await db.Listings.FindAsync(listingId);
             ViewBag.ListingName = listing?.Name;
-
 
             return View(viewModel);
         }
@@ -127,10 +136,20 @@ namespace Booking.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize]
+        [Authorize(Roles = "Admin,Agent,User")]
         public async Task<IActionResult> MultiAssignAmenity(MultiRoomClassAmenityAssignmentVM model)
         {
             var user = await userManager.GetUserAsync(User);
+
+            // Agents may only assign amenities for their own listing
+            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            {
+                var listing = await db.Listings.FindAsync(model.ListingId);
+                if (user == null || listing == null || listing.AgentId != user.Id)
+                {
+                    return Forbid();
+                }
+            }
 
 
 

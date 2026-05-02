@@ -40,6 +40,8 @@ namespace Booking.Controllers
         #region CART Methods
 
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddRoomToCart(int roomId)
         {
             var room = await db.Rooms.Include(r => r.Listing).FirstOrDefaultAsync(r => r.Id == roomId);
@@ -72,6 +74,8 @@ namespace Booking.Controllers
             return Json(new { success = true, message = "Room added to cart." });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult RemoveRoomFromCart(int roomId)
         {
             var cartRoomIds = HttpContext.Session.GetObjectFromJson<List<int>>(RoomCartSessionKey)
@@ -86,6 +90,8 @@ namespace Booking.Controllers
             return Json(new { success = true, message = "Room removed from cart." });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult ClearCart()
         {
             HttpContext.Session.Remove(RoomCartSessionKey);
@@ -153,6 +159,7 @@ namespace Booking.Controllers
             return View(model);
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> Checkout(BookingVM model)
         {
@@ -194,7 +201,7 @@ namespace Booking.Controllers
 
             bool overlap = await db.Bookings.AnyAsync(b =>
                b.ListingId == listingId
-               && b.Status == BookingStatus.Pending
+               && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
                && b.CheckInDate < model.CheckOutDate
                && model.CheckInDate < b.CheckOutDate
                && b.BookingRooms.Any(br => cartRoomIds.Contains(br.RoomId))
@@ -359,6 +366,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> ConfirmBooking(ConfirmBookingVM model)
         {
@@ -384,6 +392,12 @@ namespace Booking.Controllers
             if (!string.Equals(model.ConfirmationNo, booking.ConfirmationNo, StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError("", "Invalid confirmation number. Please check your email and try again.");
+                return View(model);
+            }
+
+            if (booking.Status != BookingStatus.Pending)
+            {
+                ModelState.AddModelError("", "This booking cannot be confirmed because it is not in Pending status.");
                 return View(model);
             }
 
@@ -457,15 +471,23 @@ namespace Booking.Controllers
         #region CancelBooking
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> CancelBooking(int bookingId)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var booking = await db.Bookings
-                .FirstOrDefaultAsync(b => b.Id == bookingId);
+                .Include(b => b.BookingRooms).ThenInclude(br => br.Room)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
 
             if (booking == null)
             {
-                return NotFound("Booking not found.");
+                return NotFound("Booking not found or does not belong to you.");
             }
 
             var hoursToCheckIn = (booking.CheckInDate - DateTime.Now).TotalHours;
@@ -482,6 +504,17 @@ namespace Booking.Controllers
 
             booking.Status = BookingStatus.Cancelled;
             db.Bookings.Update(booking);
+
+            // Release all rooms so they become bookable again
+            foreach (var br in booking.BookingRooms)
+            {
+                if (br.Room != null)
+                {
+                    br.Room.IsBooked = false;
+                    db.Rooms.Update(br.Room);
+                }
+            }
+
             await db.SaveChangesAsync();
 
             return RedirectToAction(nameof(MyBookings));
