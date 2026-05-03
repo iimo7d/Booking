@@ -284,7 +284,7 @@
                                                             @foreach (var amenity in amenities)
                                                             {
                                                                 <li class="nav-item">@amenity</li>
-                                                            })
+                                                            }
                                                         </ul>
                                                     }
 
@@ -490,7 +490,7 @@
                             <div>
                                 <span>Price Start at</span>
                                 <h4 class="card-title mb-0">
-                                    @price.ToString()
+                                    @(price?.ToString() ?? "N/A")
                                 </h4>
                             </div>
                             <div>
@@ -577,6 +577,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="createReviewForm" method="post" action="@Url.Action("PostReview", "Review")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title" id="createReviewModalLabel">Post Your Review</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -625,6 +626,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="editReviewForm" method="post" action="@Url.Action("EditReview", "Review")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h5 class="modal-title" id="editReviewModalLabel">Edit Review</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -692,6 +694,9 @@
             paramName: "file",
             maxFiles: 5,
             acceptedFiles: ".jpg,.jpeg,.png",
+            headers: {
+                "RequestVerificationToken": $('#createReviewForm input[name="__RequestVerificationToken"]').val()
+            },
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true,
@@ -714,6 +719,9 @@
             paramName: "file",
             maxFiles: 5,
             acceptedFiles: ".jpg,.jpeg,.png",
+            headers: {
+                "RequestVerificationToken": $('#editReviewForm input[name="__RequestVerificationToken"]').val()
+            },
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true,
@@ -838,7 +846,7 @@
                                 <div class="d-md-flex my-4">
                                   <div class="avatar avatar-lg me-3 flex-shrink-0">
                                     <img class="avatar-img rounded-circle"
-                                         src="${review.avatarPath ? ('~' + review.avatarPath) : '~/assets/images/avatar/default.jpg'}"
+                                         src="${review.avatarPath ? review.avatarPath : '/assets/images/avatar/default.jpg'}"
                                          alt="avatar">
                                   </div>
                                   <div>
@@ -853,7 +861,7 @@
                                       <div class="icon-md rounded text-bg-warning fs-6">${review.rate}</div>
                                     </div>
                                     <p class="mb-2">${review.content}</p>
-                            `;ed
+                            `;
                             if (review.imagePath) {
                                 reviewHtml += `<div class="col-4 col-sm-3 col-lg-2"><img src="${review.imagePath}" alt="Review Image" class="round" /></div>`;
                             }

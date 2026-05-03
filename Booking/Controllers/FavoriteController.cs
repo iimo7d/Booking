@@ -1,5 +1,6 @@
 ﻿using Booking.Data;
 using Booking.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Booking.Controllers
 {
+    [Authorize]
     public class FavoriteController : Controller
     {
         private readonly Context db;
@@ -20,6 +22,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddFavorite(int listingId)
         {
             var user = await userManager.GetUserAsync(User);
@@ -50,6 +53,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFavorite(int listingId)
         {
             var user = await userManager.GetUserAsync(User);

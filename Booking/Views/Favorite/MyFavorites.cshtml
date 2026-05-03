@@ -55,9 +55,13 @@
                                             <ul class="list-inline mb-0">
                                                 <!-- Heart icon -->
                                                 <li class="list-inline-item">
-                                                    <a asp-action="RemoveFavorite" class="btn btn-sm btn-round btn-danger mb-0">
-                                                        <i class="fa-solid fa-fw fa-heart"></i>
-                                                    </a>
+                                                    <form asp-controller="Favorite" asp-action="RemoveFavorite" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="listingId" value="@listing.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-round btn-danger mb-0">
+                                                            <i class="fa-solid fa-fw fa-heart"></i>
+                                                        </button>
+                                                    </form>
                                                 </li>
                                                 <!-- Share icon -->
                                                 <li class="list-inline-item dropdown">
@@ -105,7 +109,7 @@
                                         <div class="d-sm-flex justify-content-sm-between align-items-center mt-3 mt-md-auto">
                                             <!-- Price -->
                                             <div class="d-flex align-items-center">
-                                                <h5 class="fw-bold mb-0 me-1">$980</h5>
+                                                <h5 class="fw-bold mb-0 me-1">$@listing.StarterPrice</h5>
                                                 <span class="mb-0 me-2">/day</span>
                                             </div>
                                             <!-- Button -->

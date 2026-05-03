@@ -66,33 +66,23 @@ namespace Booking.Controllers
             // Process Image
             if (image != null)
             {
-                var folder = "Uploads/Blogs/Images";
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                var folderPath = Path.Combine(env.WebRootPath, folder);
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                var filePath = Path.Combine(folderPath, fileName);
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                var imagePath = await SaveBlogFileAsync(image, "Uploads/Blogs/Images", new[] { ".jpg", ".jpeg", ".png" }, 5 * 1024 * 1024);
+                if (imagePath == null)
                 {
-                    await image.CopyToAsync(fs);
+                    return Json(new { success = false, message = "Image must be a JPG, JPEG, or PNG file up to 5MB." });
                 }
-                blog.ImageUrl = Path.Combine(folder, fileName).Replace("\\", "/");
+                blog.ImageUrl = imagePath;
             }
 
             // Process Video
             if (video != null)
             {
-                var folder = "Uploads/Blogs/Videos";
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(video.FileName);
-                var folderPath = Path.Combine(env.WebRootPath, folder);
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                var filePath = Path.Combine(folderPath, fileName);
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                var videoPath = await SaveBlogFileAsync(video, "Uploads/Blogs/Videos", new[] { ".mp4", ".webm", ".mov" }, 50 * 1024 * 1024);
+                if (videoPath == null)
                 {
-                    await video.CopyToAsync(fs);
+                    return Json(new { success = false, message = "Video must be an MP4, WEBM, or MOV file up to 50MB." });
                 }
-                blog.VideoUrl = Path.Combine(folder, fileName).Replace("\\", "/");
+                blog.VideoUrl = videoPath;
             }
 
             blog.CreatedAt = DateTime.UtcNow;
@@ -121,16 +111,10 @@ namespace Booking.Controllers
             // Process Image Update
             if (image != null)
             {
-                var folder = "Uploads/Blogs/Images";
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                var folderPath = Path.Combine(env.WebRootPath, folder);
-
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                var filePath = Path.Combine(folderPath, fileName);
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                var imagePath = await SaveBlogFileAsync(image, "Uploads/Blogs/Images", new[] { ".jpg", ".jpeg", ".png" }, 5 * 1024 * 1024);
+                if (imagePath == null)
                 {
-                    await image.CopyToAsync(fs);
+                    return Json(new { success = false, message = "Image must be a JPG, JPEG, or PNG file up to 5MB." });
                 }
 
                 if (!string.IsNullOrEmpty(blog.ImageUrl))
@@ -139,22 +123,16 @@ namespace Booking.Controllers
                     if (System.IO.File.Exists(oldFile)) System.IO.File.Delete(oldFile);
                 }
 
-                blog.ImageUrl = Path.Combine(folder, fileName).Replace("\\", "/");
+                blog.ImageUrl = imagePath;
             }
 
             // Process Video Update
             if (video != null)
             {
-                var folder = "Uploads/Blogs/Videos";
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(video.FileName);
-                var folderPath = Path.Combine(env.WebRootPath, folder);
-
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                var filePath = Path.Combine(folderPath, fileName);
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                var videoPath = await SaveBlogFileAsync(video, "Uploads/Blogs/Videos", new[] { ".mp4", ".webm", ".mov" }, 50 * 1024 * 1024);
+                if (videoPath == null)
                 {
-                    await video.CopyToAsync(fs);
+                    return Json(new { success = false, message = "Video must be an MP4, WEBM, or MOV file up to 50MB." });
                 }
 
                 if (!string.IsNullOrEmpty(blog.VideoUrl))
@@ -163,7 +141,7 @@ namespace Booking.Controllers
                     if (System.IO.File.Exists(oldFile)) System.IO.File.Delete(oldFile);
                 }
 
-                blog.VideoUrl = Path.Combine(folder, fileName).Replace("\\", "/");
+                blog.VideoUrl = videoPath;
             }
 
             db.Blogs.Update(blog);
@@ -172,6 +150,27 @@ namespace Booking.Controllers
             return Json(new { success = true, message = "Blog updated successfully." });
         }
 
+
+        private async Task<string?> SaveBlogFileAsync(IFormFile file, string folder, string[] allowedExtensions, long maxBytes)
+        {
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension) || file.Length > maxBytes)
+            {
+                return null;
+            }
+
+            var folderPath = Path.Combine(env.WebRootPath, folder);
+            if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+            var fileName = Guid.NewGuid().ToString() + extension;
+            var filePath = Path.Combine(folderPath, fileName);
+            using (var fs = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fs);
+            }
+
+            return Path.Combine(folder, fileName).Replace("\\", "/");
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

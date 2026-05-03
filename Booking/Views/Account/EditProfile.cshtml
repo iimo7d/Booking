@@ -54,7 +54,7 @@
                 <!-- City -->
                 <div class="col-md-6">
                     <label asp-for="Profile.CityId" class="form-label">City</label>
-                    <select asp-for="Profile.CityId" class="form-select" id="cityId">
+                    <select asp-for="Profile.CityId" asp-items="@ViewBag.Cities" class="form-select" id="cityId">
                         <option value="">Select your city</option>
                     </select>
                     <span asp-validation-for="Profile.CityId" class="text-danger"></span>

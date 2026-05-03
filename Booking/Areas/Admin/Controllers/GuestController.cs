@@ -66,6 +66,9 @@ namespace Booking.Areas.Admin.Controllers
                     FullName = u.FirstName + " " + u.LastName,
                     Email = u.Email,
                     AvatarUrl = u.AvatarUrl ?? "/default-avatar.png",
+                    ContactNo = u.PhoneNumber,
+                    City = u.City != null ? u.City.Name : "N/A",
+                    Country = u.City != null ? u.City.Country.Name : "N/A",
                     BookingHistory = db.Bookings
     .Where(b => b.UserId == u.Id)
     .SelectMany(b => b.BookingRooms.Select(br => new BookingHistoryViewModel
@@ -74,7 +77,7 @@ namespace Booking.Areas.Admin.Controllers
         PricePerNight = br.Room.PricePerNight,
         BookDate = b.BookingDate,
         RoomNumber=br.Room.RoomNo,
-        BookingStatus = br.Room.IsBooked ? "Booked" : "Available",
+        BookingStatus = b.Status.ToString(),
         RoomImage = br.Room.Images
             .OrderBy(img => img.Id)
             .Select(img => img.ImagePath)
@@ -90,6 +93,9 @@ namespace Booking.Areas.Admin.Controllers
             {
                 return NotFound();
             }
+
+            ViewBag.CurrentPage = 1;
+            ViewBag.TotalPages = 1;
 
             return View(guest);
         }

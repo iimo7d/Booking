@@ -59,7 +59,7 @@ namespace Booking.Controllers
                 .Include(l => l.Images)
                 .Include(l => l.City)
                 .Where(l => l.IsActive == true &&
-                            l.ListingRoomClasses.FirstOrDefault().RoomClass.Rooms.Count()>0)
+                            l.ListingRoomClasses.Any(lrc => lrc.RoomClass.Rooms.Any()))
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(hotelName))

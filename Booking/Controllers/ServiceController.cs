@@ -36,7 +36,11 @@ namespace Booking.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(Service service)
         {
-           
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid service data." });
+            }
+            
                 await _db.Services.AddAsync(service);
                 await _db.SaveChangesAsync();
                 return Json(new { success = true, message = "Service created successfully." });
@@ -63,6 +67,11 @@ namespace Booking.Controllers
             if (id != model.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid service data." });
             }
 
             var service = await _db.Services.FindAsync(id);

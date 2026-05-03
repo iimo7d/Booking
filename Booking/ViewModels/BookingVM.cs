@@ -9,7 +9,7 @@ namespace Booking.ViewModels
         public DateTime CheckOutDate { get; set; }
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.CreditCard;
 
-        public List<Models.Room> Rooms { get; set; }
+        public List<Models.Room> Rooms { get; set; } = new List<Models.Room>();
 
         public AppUser? AppUser { get; set; }
     }

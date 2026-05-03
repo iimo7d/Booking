@@ -350,9 +350,16 @@ namespace Booking.Controllers
 
                 foreach (var roomVm in model.Rooms)
                 {
-                    var room = await db.Rooms.FindAsync(roomVm.Id);
+                    var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == roomVm.Id && r.ListingId == model.ListingId);
                     if (room == null)
                         continue;
+
+                    var roomClassBelongsToListing = await db.ListingRoomClasses.AnyAsync(lrc =>
+                        lrc.ListingId == model.ListingId && lrc.RoomClassId == roomVm.SelectedRoomClassId);
+                    if (!roomClassBelongsToListing)
+                    {
+                        return BadRequest("Invalid room class for this Hotel.");
+                    }
 
                     room.RoomNo = roomVm.RoomNo;
                     room.AdultsCapacity = roomVm.AdultsCapacity;
@@ -491,7 +498,7 @@ namespace Booking.Controllers
 
         private async Task<string> UploadFile(IFormFile file, string folderName)
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
             if (!allowedExtensions.Contains(fileExtension))
                 throw new InvalidOperationException($"Invalid file extension '{fileExtension}'. Allowed extensions are: {string.Join(", ", allowedExtensions)}.");

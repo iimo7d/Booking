@@ -32,6 +32,10 @@ namespace Booking.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(Country country)
         {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid country data." });
+            }
 
                 _db.Countries.Add(country);
                 await _db.SaveChangesAsync();
@@ -48,6 +52,11 @@ namespace Booking.Controllers
             if (id != model.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid country data." });
             }
 
             var country = await _db.Countries.FindAsync(id);

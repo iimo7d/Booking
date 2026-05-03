@@ -1,4 +1,5 @@
 ﻿using Booking.Data;
+using Booking.Enums;
 using Booking.Models;
 using Booking.ViewModels.Listing;
 using Microsoft.AspNetCore.Authorization;
@@ -25,9 +26,26 @@ namespace Booking.Controllers
 
         [HttpPost]
         [Authorize(Roles = "User")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> PostReview(Review model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var hasConfirmedBooking = await db.Bookings
+                .AnyAsync(b => b.UserId == userId
+                    && b.Status == BookingStatus.Confirmed
+                    && b.BookingRooms.Any(br => br.Room.ListingId == model.ListingId));
+
+            if (!hasConfirmedBooking)
+            {
+                TempData["Error"] = "You can only review hotels with a confirmed booking.";
+                return RedirectToAction("Details", "Listing", new { id = model.ListingId });
+            }
+
             model.UserId = userId;
 
             var uploadedImagePaths = Request.Form["UploadedImagePaths"].FirstOrDefault();
@@ -48,12 +66,13 @@ namespace Booking.Controllers
 
         [HttpPost]
         [Authorize(Roles = "User")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditReview(Review review)
         {
             if (review == null || review.Id <= 0)
             {
                 TempData["Error"] = "Invalid review.";
-                return RedirectToAction("Details", "Listing", new { id = review.ListingId });
+                return BadRequest();
             }
 
             var existingReview = await db.Reviews.AsNoTracking().FirstOrDefaultAsync(r => r.Id == review.Id);
@@ -94,6 +113,7 @@ namespace Booking.Controllers
 
             // Ensure that UserId and CreationTime remain unchanged.
             review.UserId = existingReview.UserId;
+            review.ListingId = existingReview.ListingId;
             review.CreationTime = existingReview.CreationTime;
             review.LastUpdate = DateTime.Now;
 
@@ -124,6 +144,7 @@ namespace Booking.Controllers
 
         [HttpPost]
         [Authorize(Roles = "User")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteReview(int id)
         {
             var review = await db.Reviews.FindAsync(id);
@@ -155,7 +176,7 @@ namespace Booking.Controllers
 
 
         [HttpGet]
-        [Authorize(Roles = "User")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetReviews(int listingId, int page, int pageSize)
         {
             var reviewsQuery = db.Reviews
@@ -207,16 +228,24 @@ namespace Booking.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             if (file != null && file.Length > 0)
             {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension) || file.Length > 5 * 1024 * 1024)
+                {
+                    return BadRequest("Invalid image file.");
+                }
+
                 var uploadsFolder = Path.Combine(env.WebRootPath, "images", "reviews");
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var fileName = Guid.NewGuid().ToString() + extension;
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))

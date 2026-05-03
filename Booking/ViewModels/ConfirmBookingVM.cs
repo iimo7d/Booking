@@ -17,17 +17,17 @@ namespace Booking.ViewModels
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
 
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         public PaymentMethod paymentMethod { get; set; }
-        public string HotelName { get; set; }
-        public string Address { get; set; }
+        public string HotelName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
         public int Rating { get; set; }
-        public string Image { get; set; }
+        public string Image { get; set; } = string.Empty;
 
 
         [Required(ErrorMessage = "Confirmation number is required")]
-        public string ConfirmationNo { get; set; }
-        public string Email { get; set; }
-        public List<Models.Room> Rooms { get; set; }
+        public string ConfirmationNo { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public List<Models.Room> Rooms { get; set; } = new List<Models.Room>();
     }
 }

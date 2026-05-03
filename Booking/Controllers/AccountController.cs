@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using System.Text;
@@ -40,6 +41,7 @@ namespace Booking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterVM register, string returnUrl = null)
         {
             AppUser identityUser = new AppUser
@@ -233,23 +235,30 @@ namespace Booking.Controllers
                 Password = new PasswordVM()
             };
 
-            ViewBag.Countries = new SelectList(db.Countries, "Id", "Name");
+            var selectedCity = user.CityId.HasValue
+                ? await db.Cities.FirstOrDefaultAsync(c => c.Id == user.CityId.Value)
+                : null;
+            model.Profile.CountryId = selectedCity?.CountryId ?? 0;
+            await PopulateProfileSelectionsAsync(model);
 
             return View(model);
         }
 
         [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(ProfileVM model)
         {
-            ViewBag.Countries = new SelectList(db.Countries, "Id", "Name");
-
-
-
             var user = await userManager.GetUserAsync(User);
             if (user == null)
             {
                 return RedirectToAction("Login", "Account");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await PopulateProfileSelectionsAsync(model);
+                return View(model);
             }
 
             // Update the user's profile data.
@@ -263,6 +272,15 @@ namespace Booking.Controllers
             // Handle the avatar image upload.
             if (model.Profile.AvatarImage != null && model.Profile.AvatarImage.Length > 0)
             {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                var extension = Path.GetExtension(model.Profile.AvatarImage.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension) || model.Profile.AvatarImage.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("Profile.AvatarImage", "Avatar must be a JPG, JPEG, or PNG image up to 5MB.");
+                    await PopulateProfileSelectionsAsync(model);
+                    return View(model);
+                }
+
                 // Define the folder to save uploaded images.
                 string uploadsFolder = Path.Combine(env.WebRootPath, "assets", "images", "avatar");
                 if (!Directory.Exists(uploadsFolder))
@@ -271,7 +289,7 @@ namespace Booking.Controllers
                 }
 
                 // Generate a unique file name.
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(model.Profile.AvatarImage.FileName);
+                string uniqueFileName = Guid.NewGuid().ToString() + extension;
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 // Save the file.
@@ -297,6 +315,7 @@ namespace Booking.Controllers
                 {
                     ModelState.AddModelError("", error.Description);
                 }
+                await PopulateProfileSelectionsAsync(model);
                 return View(model);
             }
 
@@ -307,6 +326,7 @@ namespace Booking.Controllers
 
         [HttpPost]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(PasswordVM model)
         {
 
@@ -333,6 +353,18 @@ namespace Booking.Controllers
 
 
 
+
+        private async Task PopulateProfileSelectionsAsync(ProfileVM model)
+        {
+            var countries = await db.Countries.ToListAsync();
+            ViewBag.Countries = new SelectList(countries, "Id", "Name", model.Profile.CountryId);
+
+            var cities = model.Profile.CountryId > 0
+                ? await db.Cities.Where(c => c.CountryId == model.Profile.CountryId).ToListAsync()
+                : new List<City>();
+
+            ViewBag.Cities = new SelectList(cities, "Id", "Name", model.Profile.CityId);
+        }
 
         [HttpGet]
         public JsonResult GetCities(int countryId)

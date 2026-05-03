@@ -6,6 +6,7 @@
 </div>
 <div class="modal-body">
     <form id="editRoomForm" method="post" action="@Url.Action("EditRoom", "Room")" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
         <input type="hidden" name="Id" value="@Model.Id" />
         <div class="mb-3">
             <label class="form-label">Room Number</label>

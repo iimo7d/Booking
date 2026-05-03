@@ -40,28 +40,23 @@ namespace Booking.Controllers
 
         // POST: /City/Create (AJAX submission)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(City city, IFormFile imageFile)
         {
-          
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid city data." });
+            }
+
                 if (imageFile != null && imageFile.Length > 0)
                 {
-                    // Define the upload folder (wwwroot/uploads/cities)
-                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "cities");
-                    if (!Directory.Exists(uploadsFolder))
+                    var imagePath = await SaveCityImageAsync(imageFile);
+                    if (imagePath == null)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        return Json(new { success = false, message = "City image must be a JPG, JPEG, or PNG image up to 5MB." });
                     }
-
-                    // Generate a unique filename and save the file
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    // Save the relative path
-                    city.ImageUrl = Path.Combine("uploads", "cities", uniqueFileName).Replace("\\", "/");
+                    city.ImageUrl = imagePath;
                 }
 
                 _db.Cities.Add(city);
@@ -81,6 +76,11 @@ namespace Booking.Controllers
                 return BadRequest();
             }
 
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid city data." });
+            }
+
             var city = await _db.Cities.FindAsync(id);
             if (city == null)
             {
@@ -95,6 +95,12 @@ namespace Booking.Controllers
                 // If a new image is uploaded, delete the old file and upload the new one.
                 if (imageFile != null && imageFile.Length > 0)
                 {
+                    var imagePath = await SaveCityImageAsync(imageFile);
+                    if (imagePath == null)
+                    {
+                        return Json(new { success = false, message = "City image must be a JPG, JPEG, or PNG image up to 5MB." });
+                    }
+
                     if (!string.IsNullOrEmpty(city.ImageUrl))
                     {
                         var existingPath = Path.Combine(_env.WebRootPath, city.ImageUrl);
@@ -104,19 +110,7 @@ namespace Booking.Controllers
                         }
                     }
 
-                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "cities");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    city.ImageUrl = Path.Combine("uploads", "cities", uniqueFileName).Replace("\\", "/");
+                    city.ImageUrl = imagePath;
                 }
 
                 await _db.SaveChangesAsync();
@@ -126,6 +120,7 @@ namespace Booking.Controllers
 
         // POST: /City/Delete (AJAX submission)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -148,6 +143,31 @@ namespace Booking.Controllers
             _db.Cities.Remove(city);
             await _db.SaveChangesAsync();
             return Json(new { success = true, message = "City deleted successfully." });
+        }
+
+        private async Task<string?> SaveCityImageAsync(IFormFile imageFile)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension) || imageFile.Length > 5 * 1024 * 1024)
+            {
+                return null;
+            }
+
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "cities");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            var uniqueFileName = Guid.NewGuid().ToString() + extension;
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(fileStream);
+            }
+
+            return Path.Combine("uploads", "cities", uniqueFileName).Replace("\\", "/");
         }
     }
 }

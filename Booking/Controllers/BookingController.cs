@@ -102,56 +102,12 @@ namespace Booking.Controllers
 
         #region Booking / Checkout
 
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> Checkout()
         {
-            var cartRoomIds = HttpContext.Session.GetObjectFromJson<List<int>>(RoomCartSessionKey)
-                              ?? new List<int>();
-
-            var model = new BookingVM();
-
-            // Load the current user data (if needed)
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userId))
-            {
-                model.AppUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            }
-
-            if (cartRoomIds.Any())
-            {
-                // Retrieve the first room and its full listing details (including city, images, etc.)
-                var firstRoom = await db.Rooms
-                    .Include(r => r.Listing)
-                        .ThenInclude(l => l.City)
-                        .ThenInclude(c => c.Country)
-                    .Include(r => r.Listing)
-                        .ThenInclude(l => l.Images)
-                    .FirstOrDefaultAsync(r => cartRoomIds.Contains(r.Id));
-
-
-                if (firstRoom != null)
-                {
-
-
-                    ViewBag.ListingId = firstRoom.ListingId;
-                    ViewBag.HotelName = firstRoom.Listing.Name;
-                    ViewBag.Address = $"{firstRoom.Listing.Street},{firstRoom.Listing.City.Name} - {firstRoom.Listing.City.Country.Name}";
-                    ViewBag.Rate = firstRoom?.Listing.Rating;
-                    ViewBag.ImageUrl = firstRoom.Listing.Images.FirstOrDefault()?.ImagePath;
-                    ViewBag.RoomCount = cartRoomIds.Count;
-                    ViewBag.Date = DateTime.Now.Date;
-                    ViewBag.Desciprtion = firstRoom.Listing.Description;
-                }
-
-                model.Rooms = await db.Rooms
-                    .Include(r => r.Images)
-                    .Include(r => r.RoomClass)
-                        .ThenInclude(rc => rc.RoomClassAmenities)
-                            .ThenInclude(rca => rca.Amenity)
-                    .Where(r => cartRoomIds.Contains(r.Id))
-                    .ToListAsync();
-            }
-            else
+            var model = await BuildCheckoutViewModelAsync(new BookingVM());
+            if (!model.Rooms.Any())
             {
                 ModelState.AddModelError("", "Your cart is empty. Please select rooms before checking out.");
             }
@@ -166,7 +122,12 @@ namespace Booking.Controllers
             if (model.CheckInDate.Date <= DateTime.Today)
             {
                 ModelState.AddModelError("", "Check-in date must be after today.");
-                return View(model);
+            }
+
+            var nights = (model.CheckOutDate - model.CheckInDate).TotalDays;
+            if (nights < 1)
+            {
+                ModelState.AddModelError("", "Check-out date must be after check-in date.");
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -183,7 +144,6 @@ namespace Booking.Controllers
             if (sameCheckInExists)
             {
                 ModelState.AddModelError("", "You already have a booking with that check-in date.");
-                return View(model);
             }
 
             var cartRoomIds = HttpContext.Session.GetObjectFromJson<List<int>>(RoomCartSessionKey)
@@ -191,15 +151,22 @@ namespace Booking.Controllers
             if (!cartRoomIds.Any())
             {
                 ModelState.AddModelError("", "Your cart is empty. Please select rooms first.");
-                return View(model);
             }
 
-            var listingId = await db.Rooms
-              .Where(r => cartRoomIds.Contains(r.Id))
-              .Select(r => r.ListingId)
-              .FirstOrDefaultAsync();
+            var rooms = await db.Rooms
+                .Include(r => r.Listing)
+                    .ThenInclude(l => l.City)
+                .Where(r => cartRoomIds.Contains(r.Id))
+                .ToListAsync();
 
-            bool overlap = await db.Bookings.AnyAsync(b =>
+            if (rooms.Select(r => r.ListingId).Distinct().Count() > 1)
+            {
+                ModelState.AddModelError("", "Rooms in one booking must be from the same listing.");
+            }
+
+            var listingId = rooms.Select(r => r.ListingId).FirstOrDefault();
+
+            bool overlap = listingId != 0 && await db.Bookings.AnyAsync(b =>
                b.ListingId == listingId
                && (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed)
                && b.CheckInDate < model.CheckOutDate
@@ -210,23 +177,13 @@ namespace Booking.Controllers
             if (overlap)
             {
                 ModelState.AddModelError("", "Some rooms in your cart are already booked for those dates.");
-                return View(model);
             }
 
-            // 6) Nights & date validation
-            var nights = (model.CheckOutDate - model.CheckInDate).TotalDays;
-            if (nights < 1)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Check-out date must be after check-in date.");
+                model = await BuildCheckoutViewModelAsync(model);
                 return View(model);
             }
-
-            // 7) Calculate total price
-            var rooms = await db.Rooms
-             .Include(r => r.Listing)
-             .ThenInclude(l => l.City)
-             .Where(r => cartRoomIds.Contains(r.Id))
-             .ToListAsync();
 
             decimal totalPrice = 0m;
             foreach (var room in rooms)
@@ -234,10 +191,8 @@ namespace Booking.Controllers
                 totalPrice += room.PricePerNight * (decimal)nights;
             }
 
-            // 8) Create new booking
             var booking = new Bookings
             {
-
                 UserId = userId,
                 ListingId = listingId,
                 CheckInDate = model.CheckInDate,
@@ -252,17 +207,11 @@ namespace Booking.Controllers
             db.Bookings.Add(booking);
             await db.SaveChangesAsync();
 
-            // 9) Link each room to the booking (BookingRooms bridging table)
-            // NOTE: We must first save the booking above so booking.Id is generated
             foreach (var roomId in cartRoomIds)
             {
                 booking.BookingRooms.Add(new BookingRoom { BookingId = booking.Id, RoomId = roomId });
             }
             await db.SaveChangesAsync();
-
-
-
-
 
             var appUser = await db.Users.FindAsync(userId);
             if (appUser != null && !string.IsNullOrWhiteSpace(appUser.Email))
@@ -306,7 +255,6 @@ namespace Booking.Controllers
 
         [HttpGet]
         [Authorize]
-
         public async Task<IActionResult> ConfirmBooking(int bookingId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -315,53 +263,13 @@ namespace Booking.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var booking = await db.Bookings
-                .Include(b => b.BookingRooms)
-                .ThenInclude(br => br.Room)
-                .ThenInclude(r => r.RoomClass)
-                .ThenInclude(rc => rc.RoomClassAmenities)
-                .ThenInclude(rca => rca.Amenity)
-                .Include(b => b.BookingRooms)
-                .ThenInclude(r => r.Room)
-                .ThenInclude(r => r.Images)
-                .Include(b => b.Listing)
-                .ThenInclude(l => l.City)
-                .ThenInclude(c => c.Country)
-                .Include(b => b.Listing)
-                .ThenInclude(l => l.Images)
-                .Include(b => b.User)
-                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
-
-            if (booking == null)
+            var vm = await BuildConfirmBookingViewModelAsync(bookingId, userId);
+            if (vm == null)
             {
                 return NotFound("Booking not found or does not belong to you.");
             }
 
-            var nights = (booking.CheckOutDate - booking.CheckInDate).TotalDays;
-            int totalNights = (int)nights;
-
-            var vm = new ConfirmBookingVM
-            {
-                BookingId = booking.Id,
-                ListingId = booking.ListingId,
-                TotalRooms = booking.BookingRooms.Count,
-                TotalNight = totalNights,
-                TotalPrice = (int)booking.TotalPrice,
-                BookingDate = booking.BookingDate,
-                CheckInDate = booking.CheckInDate,
-                CheckOutDate = booking.CheckOutDate,
-                UserName = $"{booking.User.FirstName} {booking.User.LastName}",
-                paymentMethod = booking.PaymentMethod,
-                HotelName = booking.Listing.Name,
-                Address = $"{booking.Listing.Street}, {booking.Listing.City.Name} - {booking.Listing.City.Country.Name}",
-                Rating = booking.Listing.Rating,
-                Image = booking.Listing.Images.FirstOrDefault()?.ImagePath ?? "",
-                Rooms = booking.BookingRooms.Select(br => br.Room).ToList(),
-                Email = booking.User.Email
-            };
-
-            TempData["Id"] = booking.Id;
-
+            TempData["Id"] = vm.BookingId;
             return View(vm);
         }
 
@@ -371,7 +279,7 @@ namespace Booking.Controllers
         public async Task<IActionResult> ConfirmBooking(ConfirmBookingVM model)
         {
             var user = await userManager.GetUserAsync(User);
-            if (string.IsNullOrEmpty(user.Id))
+            if (user == null)
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -386,29 +294,40 @@ namespace Booking.Controllers
             if (booking == null)
             {
                 ModelState.AddModelError("", "Booking not found or does not belong to you.");
-                return View(model);
+                var missingVm = await BuildConfirmBookingViewModelAsync(model.BookingId, user.Id);
+                return View(missingVm ?? model);
             }
 
             if (!string.Equals(model.ConfirmationNo, booking.ConfirmationNo, StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError("", "Invalid confirmation number. Please check your email and try again.");
+                var invalidVm = await BuildConfirmBookingViewModelAsync(booking.Id, user.Id);
+                if (invalidVm != null)
+                {
+                    invalidVm.ConfirmationNo = model.ConfirmationNo;
+                    return View(invalidVm);
+                }
                 return View(model);
             }
 
             if (booking.Status != BookingStatus.Pending)
             {
                 ModelState.AddModelError("", "This booking cannot be confirmed because it is not in Pending status.");
+                var statusVm = await BuildConfirmBookingViewModelAsync(booking.Id, user.Id);
+                if (statusVm != null)
+                {
+                    statusVm.ConfirmationNo = model.ConfirmationNo;
+                    return View(statusVm);
+                }
                 return View(model);
             }
 
-            // Update booking and room statuses
             booking.Status = BookingStatus.Confirmed;
             db.Bookings.Update(booking);
 
             foreach (var br in booking.BookingRooms)
             {
                 var room = br.Room;
-                room.IsBooked = true;
                 room.BookedCount += 1;
                 db.Rooms.Update(room);
             }
@@ -421,7 +340,6 @@ namespace Booking.Controllers
 
             await db.SaveChangesAsync();
 
-            // Create the HTML email confirmation message
             string emailBody = $@"
 <html>
   <head>
@@ -443,7 +361,7 @@ namespace Booking.Controllers
         <h1>Booking Confirmed!</h1>
       </div>
       <div class='content'>
-        <p>Dear {user.FirstName?? "Valued Customer"},</p>
+        <p>Dear {user.FirstName ?? "Valued Customer"},</p>
         <p>Your booking has been successfully confirmed with the following details:</p>
         <ul>
           <li><strong>Confirmation No:</strong> {booking.ConfirmationNo}</li>
@@ -462,7 +380,7 @@ namespace Booking.Controllers
 
             await emailSender.SendEmailAsync(user.Email, "Your Booking Confirmation", emailBody);
 
-            TempData["ConfirmationSuccess"] = "Booking confirmed successfully! Rooms are booked.";
+            TempData["ConfirmationSuccess"] = "Booking confirmed successfully.";
             return RedirectToAction(nameof(MyBookings));
         }
 
@@ -496,7 +414,6 @@ namespace Booking.Controllers
                 return BadRequest("Cannot cancel within 24 hours of check-in.");
             }
 
-            // If booking is already cancelled or completed
             if (booking.Status == BookingStatus.Cancelled || booking.Status == BookingStatus.Completed)
             {
                 return BadRequest("Booking is not eligible for cancellation.");
@@ -504,17 +421,6 @@ namespace Booking.Controllers
 
             booking.Status = BookingStatus.Cancelled;
             db.Bookings.Update(booking);
-
-            // Release all rooms so they become bookable again
-            foreach (var br in booking.BookingRooms)
-            {
-                if (br.Room != null)
-                {
-                    br.Room.IsBooked = false;
-                    db.Rooms.Update(br.Room);
-                }
-            }
-
             await db.SaveChangesAsync();
 
             return RedirectToAction(nameof(MyBookings));
@@ -573,6 +479,113 @@ namespace Booking.Controllers
             return View(viewModel);
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> ShowCart()
+        {
+            var cartRoomIds = HttpContext.Session.GetObjectFromJson<List<int>>(RoomCartSessionKey) ?? new List<int>();
+            var rooms = await db.Rooms
+                .Include(r => r.Listing)
+                .Where(r => cartRoomIds.Contains(r.Id))
+                .ToListAsync();
+
+            return View(rooms);
+        }
+
+        private async Task<BookingVM> BuildCheckoutViewModelAsync(BookingVM model)
+        {
+            var cartRoomIds = HttpContext.Session.GetObjectFromJson<List<int>>(RoomCartSessionKey)
+                              ?? new List<int>();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                model.AppUser = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            }
+
+            if (cartRoomIds.Any())
+            {
+                var firstRoom = await db.Rooms
+                    .Include(r => r.Listing)
+                        .ThenInclude(l => l.City)
+                        .ThenInclude(c => c.Country)
+                    .Include(r => r.Listing)
+                        .ThenInclude(l => l.Images)
+                    .FirstOrDefaultAsync(r => cartRoomIds.Contains(r.Id));
+
+                if (firstRoom != null)
+                {
+                    ViewBag.ListingId = firstRoom.ListingId;
+                    ViewBag.HotelName = firstRoom.Listing.Name;
+                    ViewBag.Address = $"{firstRoom.Listing.Street},{firstRoom.Listing.City.Name} - {firstRoom.Listing.City.Country.Name}";
+                    ViewBag.Rate = firstRoom.Listing.Rating;
+                    ViewBag.ImageUrl = firstRoom.Listing.Images.FirstOrDefault()?.ImagePath;
+                    ViewBag.RoomCount = cartRoomIds.Count;
+                    ViewBag.Date = DateTime.Now.Date;
+                    ViewBag.Desciprtion = firstRoom.Listing.Description;
+                }
+
+                model.Rooms = await db.Rooms
+                    .Include(r => r.Images)
+                    .Include(r => r.RoomClass)
+                        .ThenInclude(rc => rc.RoomClassAmenities)
+                            .ThenInclude(rca => rca.Amenity)
+                    .Where(r => cartRoomIds.Contains(r.Id))
+                    .ToListAsync();
+            }
+            else
+            {
+                model.Rooms = new List<Room>();
+            }
+
+            return model;
+        }
+
+        private async Task<ConfirmBookingVM?> BuildConfirmBookingViewModelAsync(int bookingId, string userId)
+        {
+            var booking = await db.Bookings
+                .Include(b => b.BookingRooms)
+                .ThenInclude(br => br.Room)
+                .ThenInclude(r => r.RoomClass)
+                .ThenInclude(rc => rc.RoomClassAmenities)
+                .ThenInclude(rca => rca.Amenity)
+                .Include(b => b.BookingRooms)
+                .ThenInclude(r => r.Room)
+                .ThenInclude(r => r.Images)
+                .Include(b => b.Listing)
+                .ThenInclude(l => l.City)
+                .ThenInclude(c => c.Country)
+                .Include(b => b.Listing)
+                .ThenInclude(l => l.Images)
+                .Include(b => b.User)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+
+            if (booking == null)
+            {
+                return null;
+            }
+
+            var nights = (booking.CheckOutDate - booking.CheckInDate).TotalDays;
+            return new ConfirmBookingVM
+            {
+                BookingId = booking.Id,
+                ListingId = booking.ListingId,
+                TotalRooms = booking.BookingRooms.Count,
+                TotalNight = (int)nights,
+                TotalPrice = (int)booking.TotalPrice,
+                BookingDate = booking.BookingDate,
+                CheckInDate = booking.CheckInDate,
+                CheckOutDate = booking.CheckOutDate,
+                UserName = $"{booking.User.FirstName} {booking.User.LastName}",
+                paymentMethod = booking.PaymentMethod,
+                HotelName = booking.Listing.Name,
+                Address = $"{booking.Listing.Street}, {booking.Listing.City.Name} - {booking.Listing.City.Country.Name}",
+                Rating = booking.Listing.Rating,
+                Image = booking.Listing.Images.FirstOrDefault()?.ImagePath ?? string.Empty,
+                Rooms = booking.BookingRooms.Select(br => br.Room).ToList(),
+                Email = booking.User.Email ?? string.Empty
+            };
+        }
 
         public async Task<IActionResult> GetCartDropdownPartial()
         {

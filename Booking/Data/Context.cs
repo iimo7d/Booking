@@ -32,22 +32,21 @@ namespace Booking.Data
             var userRole = new IdentityRole { Id = "27c0908b-e09c-4a68-906d-e42c3295dec9", Name = "User", NormalizedName = "USER", ConcurrencyStamp = "9b52f8d9-cfbe-4f9c-bdfb-41423f3face9" };
             var agentRole = new IdentityRole { Id = "86343a28-20ab-450e-b401-5fa16c073688", Name = "Agent", NormalizedName = "AGENT", ConcurrencyStamp = "9348b5af-c885-44d5-8f55-28610173c272" };
 
-            var hasher = new PasswordHasher<AppUser>();
             var adminUser = new AppUser
             {
                 Id = "8709e6d5-6c9e-442e-98d6-49d39f80014f",
-                UserName = "Mohammad",
-                NormalizedUserName = "MOHAMMAD",
-                Email = "Mohammadabuaisheh40@gmail.com",
-                NormalizedEmail = "MOHAMMADABUAISHEH40@GMAIL.COM",
+                UserName = "admin",
+                NormalizedUserName = "ADMIN",
+                Email = "admin@booking.com",
+                NormalizedEmail = "ADMIN@BOOKING.COM",
                 EmailConfirmed = true,
-                PasswordHash = hasher.HashPassword(null, "Mohammad1012004"),
+                PasswordHash = null,   // Set a strong password after running migrations
                 SecurityStamp = "f73eb42e-7153-44a4-8a5e-aa8f5d0b184c",
                 JoinDate = DateTime.Now,
-                FirstName = "Mohammad",
-                LastName = "Abu Aisheh",
+                FirstName = "Admin",
+                LastName = "User",
                 CityId = 1,
-                DOB = new DateOnly(2004, 1, 10)
+                DOB = new DateOnly(2000, 1, 1)
             };
 
             var adminUserRole = new IdentityUserRole<string> { UserId = adminUser.Id, RoleId = adminRole.Id };

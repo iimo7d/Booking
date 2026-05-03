@@ -43,6 +43,11 @@ namespace Booking.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(RoomClass roomClass)
         {
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid room class data." });
+            }
+
             await db.RoomClasses.AddAsync(roomClass);
             await db.SaveChangesAsync();
             return Json(new { success = true, message = "Room class created successfully." });
@@ -56,6 +61,11 @@ namespace Booking.Controllers
             if (id != model.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid room class data." });
             }
 
             var roomClass = await db.RoomClasses.FindAsync(id);
@@ -86,16 +96,20 @@ namespace Booking.Controllers
             return Json(new { success = true, message = "Room class deleted successfully." });
         }
 
+        [HttpGet]
         [Authorize(Roles = "Admin,Agent,User")]
         public async Task<IActionResult> MultiAssignAmenity(int listingId)
         {
             var listing = await db.Listings.FindAsync(listingId);
+            if (listing == null)
+            {
+                return NotFound();
+            }
 
-            // Agents may only assign amenities for their own listing
-            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            if (!User.IsInRole("Admin"))
             {
                 var currentUser = await userManager.GetUserAsync(User);
-                if (currentUser == null || listing == null || listing.AgentId != currentUser.Id)
+                if (currentUser == null || listing.AgentId != currentUser.Id)
                 {
                     return Forbid();
                 }
@@ -126,7 +140,7 @@ namespace Booking.Controllers
                 }).ToList()
             };
 
-            ViewBag.ListingName = listing?.Name;
+            ViewBag.ListingName = listing.Name;
 
             return View(viewModel);
         }
@@ -140,20 +154,28 @@ namespace Booking.Controllers
         public async Task<IActionResult> MultiAssignAmenity(MultiRoomClassAmenityAssignmentVM model)
         {
             var user = await userManager.GetUserAsync(User);
-
-            // Agents may only assign amenities for their own listing
-            if (User.IsInRole("Agent") && !User.IsInRole("Admin"))
+            if (user == null)
             {
-                var listing = await db.Listings.FindAsync(model.ListingId);
-                if (user == null || listing == null || listing.AgentId != user.Id)
-                {
-                    return Forbid();
-                }
+                return Unauthorized();
             }
 
+            var listing = await db.Listings.FindAsync(model.ListingId);
+            if (listing == null)
+            {
+                return NotFound();
+            }
 
+            if (!User.IsInRole("Admin") && listing.AgentId != user.Id)
+            {
+                return Forbid();
+            }
 
-            foreach (var assignment in model.RoomClassAssignments)
+            var validRoomClassIds = await db.ListingRoomClasses
+                .Where(lrc => lrc.ListingId == model.ListingId)
+                .Select(lrc => lrc.RoomClassId)
+                .ToListAsync();
+
+            foreach (var assignment in model.RoomClassAssignments.Where(a => validRoomClassIds.Contains(a.RoomClassId)))
             {
                 var distinctAmenityIds = (assignment.SelectedAmenityIds ?? new List<int>()).Distinct().ToList();
 
@@ -188,13 +210,13 @@ namespace Booking.Controllers
 
             await db.SaveChangesAsync();
 
-            if ( await userManager.IsInRoleAsync(user, "Agent"))
+            if (await userManager.IsInRoleAsync(user, "Agent"))
             {
                 return RedirectToAction("Details", "Listing", new { id = model.ListingId });
             }
             else if (await userManager.IsInRoleAsync(user, "Admin"))
             {
-                return RedirectToAction("AddRooms", "Room" , new { listingId=model.ListingId });
+                return RedirectToAction("AddRooms", "Room", new { listingId = model.ListingId });
             }
             else
             {
@@ -258,11 +280,7 @@ namespace Booking.Controllers
   </body>
 </html>";
 
-
                 await emailSender.SendEmailAsync(user.Email, "Request Sent", emailBody);
-
-
-
                 TempData["Message"] = "Amenity assignments updated successfully!";
                 return RedirectToAction("RequestSent", "JoinUs");
             }

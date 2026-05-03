@@ -42,7 +42,11 @@ namespace Booking.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Amenity amenity)
         {
-            
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid amenity data." });
+            }
+             
                 _db.Amenities.Add(amenity);
                 await _db.SaveChangesAsync();
                 return Json(new { success = true, message = "Amenity created successfully." });
@@ -68,6 +72,11 @@ namespace Booking.Controllers
             if (id != model.Id)
             {
                 return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Json(new { success = false, message = "Invalid amenity data." });
             }
 
             var amenity = await _db.Amenities.FindAsync(id);

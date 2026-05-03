@@ -165,11 +165,15 @@
     </div>
 </div>
 
+<form id="roomDeleteTokenForm" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
 
-            function loadRoomEdit(roomId) {
+            window.loadRoomEdit = function (roomId) {
                 $.ajax({
                     url: '@Url.Action("EditRoom", "Room", new { area = "" })',
                     type: 'GET',
@@ -226,10 +230,10 @@
                         });
                     }
                 });
-            }
+            };
 
             // Bind delete event to room deletion using event delegation
-            $("#roomsAccordion").on("click", ".delete-room", function () {
+            $(document).on("click", ".delete-room", function () {
                 var $roomEntry = $(this).closest(".room-entry");
                 var roomId = $roomEntry.data("room-id"); // Get room id from data attribute
 
@@ -253,6 +257,9 @@
                             type: "POST",
                             url: '@Url.Action("DeleteRoom", "Room", new { area = "" })',
                             data: { id: roomId },
+                            headers: {
+                                "RequestVerificationToken": $('#roomDeleteTokenForm input[name="__RequestVerificationToken"]').val()
+                            },
                             success: function (response) {
                                 Swal.fire('Deleted!', 'The room has been deleted.', 'success');
                                 $roomEntry.remove();

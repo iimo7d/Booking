@@ -51,7 +51,7 @@ namespace Booking.Areas.Agent.Controllers
 
             if (listing == null)
             {
-                return RedirectToAction("Home", "Error", new { area = "" });
+                return RedirectToAction("Error", "Home", new { area = "" });
             }
 
             var bookings = await db.Bookings

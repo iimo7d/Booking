@@ -200,7 +200,7 @@
             addRemoveLinks: true,
             dictDefaultMessage: "Drop files here or click to upload.",
             autoProcessQueue: true, // Automatically upload files upon drop
-            headers: { 'RequestVerificationToken': csrfToken }
+            headers: { 'RequestVerificationToken': csrfToken },
             init: function () {
                 this.on("success", function (file, response) {
                     // Expecting JSON response with a 'filePath' property.
